@@ -1,0 +1,166 @@
+\documentclass[10pt]{beamer}
+
+\usepackage[utf8]{inputenc}
+\usepackage{beamerthemebars}
+
+\usepackage{fontenc}
+\usepackage{graphics}
+\usepackage{hyperref}
+\usepackage{multimedia}
+\usepackage{hyperref}
+\usepackage{tikz}
+\usetikzlibrary{calc}
+\usetikzlibrary{snakes}
+\usepgflibrary{fpu}
+\usetikzlibrary{cd}
+\usetikzlibrary{angles} 
+\usepackage{latexsym} % Símbolos                        ı
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage{pifont}
+\usepackage{animate}
+\usepackage{fancybox}
+\usepackage{media9}
+\usepackage{color}
+\usepackage{synttree}
+%\newtheorem{acknowledgement}[theorem]{Acknowledgment}
+%\newtheorem{algorithm}[theorem]{Algorithm}
+\newtheorem{axiom}{Axiom}
+\newtheorem{case}{Case}
+\newtheorem{claim}{Claim}
+\newtheorem{conclusion}{Conclusion}
+\newtheorem{condition}{Condition}
+\newtheorem{conjecture}{Conjecture}
+\newtheorem{assumption}{Assumption}
+\newtheorem{criterion}{Criterion}
+\newtheorem{proposition}{Proposition}
+\newtheorem{question}{Question}
+
+\newcommand{\Ec}{\mathcal{E}}
+\newcommand{\Ac}{\mathcal{A}}
+\newcommand{\Vc}{\mathcal{V}}
+\newcommand{\Dc}{\mathcal{D}}
+\newcommand{\Sc}{\mathcal{S}}
+\newcommand{\Nbb}{\mathbb{N}}
+\newcommand{\Rbb}{\mathbb{R}}
+\newcommand{\level}{\mathrm{level}}
+\newcommand{\depth}{\mathrm{depth}}
+\newcommand{\rank}{\mathrm{rank}}
+
+
+\mode<presentation> {
+  \usetheme{Warsaw}       % Tema seleccionado.
+  \usecolortheme{crane}   % Color del tema.
+  \setbeamercovered{transparent} % Transparencia.
+}
+
+\title{Model Proposal}
+\author{Epidemiological Models -- COVID-19 Data Science Task Force}
+\institute[]{} 
+\titlegraphic{
+%\includegraphics[width=1.5cm]{esi.png}~%
+%   \includegraphics[width=3cm]{ceu_simbolo.png}~%
+   }
+\date{}
+
+
+\begin{document}
+
+\begin{frame}
+\maketitle
+\end{frame}
+
+\begin{frame}
+We consider $\Omega = \bigcup_{i \in K} \Omega_i$ a number of $\#K$-boxes and for
+each unit period of time $[t_0,t_1]$ is divided in two regimes:
+\begin{block}{First regime}
+For $t_0 \le t \le t^*$ the system behaviour is a classical SEIR for
+each $i \in K$ for a given $(\mu=0,\beta,\gamma,\sigma)$ and
+$(S_i(t_0),E_i(t_0),I_i(t_0),R_i(t_0))$ we compute the solution
+\begin{align}
+\dot{S}_i(t) & = -\beta S_i \,I_i, \label{PSEIR1}\\
+\dot{E}_i(t) & = \beta S_i \,I_i - \sigma E_i, \label{PSEIR2} \\
+\dot{I}_i(t) & = \sigma E_i - \mu I_i, \label{PSEIR3}\\
+\dot{R}_i(t) & = \gamma I_i - \mu R_i, \label{PSEIR4}
+\end{align}
+denoted by $(S_i(t),E_i(t),I_i(t),R_i(t))$ for $t_0 \le t \le t^*$
+\end{block}
+
+\end{frame}
+
+
+\begin{frame}{Original model $\mu=0$}
+\begin{block}{Second Regime I}
+For $t^* \le t \le t_1$ and $i \in K$ let be
+$S_{i,j}(t)$ (respectively, $I_{i,j}(t))$ denotes the susceptible individuals (the infected individuals) that lives in box $i$ and moves to 
+box $j.$ In a similar way $N_{i,j}$ are the individuals that lives in box $i$ and moves to box $j.$
+Clearly,
+$$
+N_i = \sum_{j \in K} N_{i,j}.
+$$
+Then ratio of infected individuals in the box $i$ is computed as
+\begin{align*}
+I_i(t) & = \frac{1}{N_i} \sum_{j \in K} I_{i,j}(t),
+\end{align*}
+where
+$$
+\sum_{j \in K} I_{i,j}(t) \sim \mathcal{B}\left( \sum_{j \in K} S_{i,j}(t^*), \beta
+\frac{\sum_{j \in K} I_{i,j}(t^*)}{\sum_{j \in K}N_{i,j}}
+ \right)
+$$
+\end{block}
+\end{frame}
+
+
+\begin{frame}{Original model $\mu=0$}
+\begin{block}{Second Regime II}
+Then ratio of susceptible individuals in the box $i$ is computed as
+\begin{align*}
+S_i(t) & = \frac{1}{N_i} \sum_{j \in K} S_{i,j}(t),
+\end{align*}
+where
+$$
+\sum_{j \in K} S_{i,j}(t) \sim \mathcal{B}\left( \sum_{j \in K} I_{i,j}(t^*), \beta
+\frac{\sum_{j \in K} I_{i,j}(t^*)}{\sum_{j \in K}N_{i,j}}
+ \right)
+$$
+\end{block}
+\end{frame}
+
+\end{document}
+
+\begin{frame}{Probability Decomposition}
+Take $A \in \{S,E,I,R\},$ by using the total probability formulae, we can decompose
+\begin{align*}
+A(t) &:= \mathbb{P}((t,\omega) \in \text{A}) \\
+     & = \sum_{i \in I}  \mathbb{P}\left((t,\omega) \in \text{A}| (t,\omega) \in \{t\} \times \Omega_i\right)
+     \mathbb{P}((t,\omega) \in \{t\} \times \Omega_i).
+\end{align*}
+Now,
+$$
+A_i(t):=  \mathbb{P}\left((t,\omega) \in \text{A}| (t,\omega) \in \{t\} \times \Omega_i\right)
+$$
+and
+$$
+P_i(t):= \mathbb{P}((t,\omega) \in \{t\} \times \Omega_i).
+$$
+Moreover, the dynamic of model changes as:
+$$
+\dot{A}(t) = \sum_{i \in I} \dot{A}_i(t)P_i(t) + A_i(t)\dot{P}_i(t).
+$$
+\end{frame}
+
+\begin{frame}
+It allows to the following system of equations:
+\begin{align*}
+\sum_{i \in I} \dot{S}_i(t)P_i(t) + S_i(t)\dot{P}_i(t) & = -\beta \left(\sum_{i \in I} S_i(t)P_i(t)\right)  \, \left(\sum_{i \in I} I_i(t)P_i(t)\right), \\
+\sum_{i \in I} \dot{E}_i(t)P_i(t) + E_i(t)\dot{P}_i(t) & = \beta \left(\sum_{i \in I} S_i(t)P_i(t)\right) \,\left(\sum_{i \in I} I_i(t)P_i(t)\right) & \\
+& - \sigma \left(\sum_{i \in I} E_i(t)P_i(t)\right),  \\
+\sum_{i \in I} \dot{I}_i(t)P_i(t) + I_i(t)\dot{P}_i(t) & = \sigma \left(\sum_{i \in I} E_i(t)P_i(t)\right) - \mu \left(\sum_{i \in I} I_i(t)P_i(t)\right), \\
+\sum_{i \in I} \dot{R}_i(t)P_i(t) + R_i(t)\dot{P}_i(t) & = \gamma \left(\sum_{i \in I} I_i(t)P_i(t)\right) - \mu \left(\sum_{i \in I} R_i(t)P_i(t)\right), 
+\end{align*}
+that we need to complete by including the population dynamics given by the bundle
+$$
+\{(P_i(t),\dot{P}_i(t)):i \in I\}.
+$$
+\end{frame}
