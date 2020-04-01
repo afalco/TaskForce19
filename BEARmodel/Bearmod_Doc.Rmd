@@ -1,0 +1,459 @@
+---
+title: "Bearmod_Documentation"
+author: "COVId19 TaskForce"
+date: "4/1/2020"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Parameters model
+
+```{r}
+#preprocess_ComVal.R
+library(lubridate)
+
+# ## 2013 - 2014 data
+# movement_data2 = read.csv("baidu/7 feb/Baidu_LBS_flow_201312-201404.csv")
+# cell_user_from_data = read.csv("baidu/7 feb/LBSusers_from_201312-201404.csv")
+# cell_user_from_data$date = date(cell_user_from_data$date) + days(1)
+# cell_user_to_data = read.csv("baidu/7 feb/LBSusers_to_201312-201404.csv")
+# cell_user_to_data$date = date(cell_user_to_data$date) + days(1)
+
+movement_data = read.table("testmove_CV.csv",sep=",",header=T)
+
+patNames = unique(movement_data$to)[order(unique(movement_data$to))]  
+patIDs = 1:length(patNames)
+pat_locator = data.frame(patNames,patIDs)
+
+#convert dates to format R can read
+movement_data$date = ymd("2020-02-25")+movement_data$date
+
+# 
+# missing_dates = c(date("2014-1-17"), date("2014-2-2"),date("2014-2-18"),date("2014-2-20")
+#     date("2014-3-1"),date("2014-3-2"))
+# for (dates in 1:length(missing_dates)){
+#   replaceday = subset(movement_data,Date == missing_dates[dates] - days(1))
+#   replaceday$Date = replaceday$Date + days(1)
+#   movement_data = rbind(movement_data,replaceday)
+# }
+
+recrate = 1/12 #daily probability of recovery
+exposerate = 2.68/6 # R0 of 2.68, 5.8 days till seeking treatment 
+# How many people a single person potentially infects per day -- can be calculated from R0 #estimate if you divide R0 by infectious period
+exposepd = 5.1 # incubation period
+```
+
+## Model runnig
+
+```{r}
+#run_model_ComVal.R
+####Model running code for BEARmod v.0.6
+rm(list=ls())
+library(data.table) # fread - fastly reading data
+library(lubridate)
+
+# setwd('//worldpop.files.soton.ac.uk/Worldpop/Projects/WP519091_Seasonality')
+# setwd('D:/OneDrive - University of Southampton/Wuhan Coronavirus R0/Spread risk')
+#setwd('C:/Users/sl4m18/OneDrive - University of Southampton/Wuhan Coronavirus R0/Spread risk')
+
+
+source("bearmod_fx.R")
+# source("bearmod/bearmod_fx.R")
+source("preprocess_ComVal.R")
+#Initial parameters
+NPat = length(patNames)
+patnInf = rep(0,NPat)
+patnExp = c(rep(0,NPat) )
+
+#pat_locator$pop = 4941509
+#three provinces 
+pat_locator$pop = rep(0, NPat)
+pat_locator$pop[1] = 575470
+pat_locator$pop[2] = 2540707
+pat_locator$pop[3] = 1825332
+
+#start infection in Comunidad Valenciana
+patnInf[which(patNames == 1)] = 5
+patnInf[which(patNames == 2)] = 25
+patnInf[which(patNames == 3)] = 5
+
+#recovery rate variable for each available day 
+recover_df = data.frame(date = seq(from=min(movement_data$date),to=max(movement_data$date),by="days"),recrate = recrate)
+
+##load a new mobility scenario 
+relative_move_df=data.frame()
+relative_move_data = data.frame()
+ 
+#relative_move_data = read.table("file://C:/Users/nuria/OneDrive/myProjects/COVID-19/BEARmod-master/BEARmod-master/zeroMobility_CV.csv",sep=",",header=T)
+
+#convert dates to format R can read
+#relative_move_data$date = ymd("2020-02-25")+30 
+ 
+#### Running the model  ####
+
+HPop = InitiatePop(pat_locator,patnInf,patnExp)
+###dates of simulation
+
+#input_dates = rep("2020-02-26",30)
+#input_dates=append(input_dates,rep("2020-03-27",15))
+#input_dates=append(input_dates,rep("2020-04-11",50))
+input_dates = seq(from=min(movement_data$date),to=max(movement_data$date),by="days") # unique(movement_data$date)
+
+#input_dates = seq(from=min(movement_data$date),to=max(movement_data$date),by="days")
+#input_dates = seq(date("2020-02-26"),date("2020-4-26"),by="days") # coresponding to the period from 2020-12-08 to 2 wks after LNY's day 
+# input_dates = seq(date("2013-12-02"),date("2014-2-27"),by="days") # coresponding to the period from 2020-12-08 to 4 wks after LNY's day
+results = list()
+
+HPop_update2 <- runSim(HPop,pat_locator,relative_move_data,movement_data, input_dates,recover_df, exposerate,exposepd,exposed_pop_inf_prop = 0, TSinday = 1)
+run <- 1
+results[[run]] <- HPop_update2$all_spread
+onerun <- data.frame(results[run])
+
+#Visualising results
+# for (run in 1:2){
+#   
+#   HPop_update2 = runSim(HPop,pat_locator,relative_move_data,movement_data, input_dates,recover_df, exposerate,exposepd,exposed_pop_inf_prop = 0, TSinday = 1)
+#   #print(paste0("Run # ",run))
+#   results[[run]] = HPop_update2$all_spread
+# }
+
+# this is just one run of the model instance 10 
+onerun <- data.frame(results[run])
+
+#plot 
+#infected 
+plot(onerun$X3)
+onerun$X3[35:50]
+
+save(results,file="results_ComVal.RData")
+# 
+```
+
+## The core model file
+```{r}
+######
+
+library(lubridate)
+
+#This function creates the starting population
+InitiatePop = function(pat_locator,initialInf,initialExp){
+  NPat = dim(pat_locator)[1]
+  list(
+    nInitialInf = initialInf,
+    nInitialExp = initialExp,
+    nInf = initialInf,
+    nExp = initialExp,
+    nRec = rep(0,NPat),
+    nTotal = pat_locator$pop,
+    names = pat_locator$patNames,
+    IDs = pat_locator$patIDs,
+    relativeInf = rep(1,NPat),
+    nRecoveredToday = rep(0,NPat),
+    nInfectedToday = rep(0,NPat),
+    nExposedToday = rep(0,NPat),
+    nInfMovedToday = rep(0,NPat),
+    controlled = rep(0,NPat)
+  )
+}
+
+##### Epidemic functions: exposure, infectivity, recovery  ####
+recoveryTimeStep = function(HPop, recrate_values,current_day){
+  recrate = subset(recrate_values,date == current_day)$recrate
+
+  print(paste0("Day ",current_day, " recovery rate: ", recrate))
+  for (i in 1:length(HPop$nInf)){
+  HPop$nRecoveredToday[i]= sum(rbinom(HPop$nInf[i],1,recrate))
+  HPop$nInf[i] = HPop$nInf[i] - HPop$nRecoveredToday[i]
+  HPop$nRec[i] = HPop$nRec[i] + HPop$nRecoveredToday[i]
+  
+  }
+  print(paste0("Number of people recovering: ",sum(HPop$nRecoveredToday)))
+  HPop
+}
+
+exposedtoinfTimeStep = function(HPop, exp_to_infrate){
+  #(exp_to_infrate)
+  for (i in 1:length(HPop$nInf)){
+    print(HPop$nExposedToday[i])
+    print(HPop$nExp[i])
+    HPop$nInfectedToday[i]= sum(rbinom(HPop$nExp[i],1,exp_to_infrate))
+    HPop$nInf[i] = HPop$nInf[i] + HPop$nInfectedToday[i]
+    HPop$nExp[i] = HPop$nExp[i] - HPop$nInfectedToday[i]
+  }
+  print(paste0("Number of people newly infectious: ",sum(HPop$nInfectedToday)))
+  HPop
+}
+
+exposedTimeStep = function(HPop, exposerate_df, current_day, exposed_pop_inf_prop){
+  
+  if (is.numeric(exposerate_df)){
+    exposerate = exposerate_df
+  }
+  if (is.data.frame(exposerate_df)){
+    exposerate = subset(exposerate_df, date == current_day)$exposerate
+  }
+  for (i in 1:length(HPop$nInf)){
+    infectious_pop = HPop$nInf[i] + exposed_pop_inf_prop * HPop$nExp[i]
+    #HPop$nExposedToday[i]= sum(rbinom(infectious_pop,1,exposerate)) * (1 - ( (HPop$nInf[i] + HPop$nExp[i]) / HPop$nTotal[i]))
+    HPop$nExposedToday[i]= sum(rpois(infectious_pop,exposerate)) * (1 - ( (HPop$nInf[i] + HPop$nExp[i] + HPop$nRec[i]) / HPop$nTotal[i]))
+
+
+    if (HPop$nExp[i] + HPop$nExposedToday[i] < HPop$nTotal[i] - HPop$nInf[i] - HPop$nRec[i] ) {
+      HPop$nExp[i] = HPop$nExp[i] + HPop$nExposedToday[i]
+      
+    } else {
+      HPop$nExposedToday[i] = max(0,HPop$nTotal[i] - HPop$nInf[i] - HPop$nExp[i]- HPop$nRec[i])
+      
+      HPop$nExp[i]  = max(0,HPop$nTotal[i] - HPop$nInf[i] - HPop$nRec[i])
+      
+    }
+  }
+  print(paste0("Number of people newly exposed: ",sum(HPop$nExposedToday)))
+  HPop
+}
+
+
+exposedTimeStep_timespent = function(HPop, exposerate_df, current_day, exposed_pop_inf_prop,ts_data){
+  
+  TS_matrix = matrix(0,NPat,NPat,dimnames=list(patIDs,patIDs))
+  daily_move = subset(ts_data,date == current_day)
+  daily_move = subset(daily_move,!is.na(fr_pat) & !is.na(to_pat) & !is.na(fr_users) & !is.na(movers))
+  
+  daily_move_mat = daily_move[,is.element(names(daily_move),c("fr_pat","to_pat","fr_users","movers"))]
+  daily_move_mat = as.matrix(daily_move_mat)
+  col1 = which(colnames(daily_move_mat) == "fr_pat")
+  col2=which(colnames(daily_move_mat) == "to_pat")
+  
+  colmove = which(colnames(daily_move_mat) == "movers")
+  colusers=which(colnames(daily_move_mat) == "fr_users")
+  TS_matrix[daily_move_mat[,c(col1,col2)]] = daily_move_mat[,colmove]/daily_move_mat[,colusers]
+  if (length(which(rowSums(TS_matrix)>1)) > 0){
+    print("Warning: row sums > 1 in movement matrix. Correcting...")
+    correctingrows = which(rowSums(TS_matrix)>1)
+    for (i in correctingrows){
+      TS_matrix[i,] = TS_matrix[i,] /sum(TS_matrix[i,] )
+    }
+  }
+  for (i in 1:length(patIDs)){
+    TS_matrix[i,i] = 1 - sum(TS_matrix[i,-i])
+  }
+  
+  if (is.numeric(exposerate_df)){
+    exposerate = exposerate_df
+  }
+  if (is.data.frame(exposerate_df)){
+    exposerate = subset(exposerate_df, date == current_day)$exposerate
+  }
+  movement_adjusted_infectious_prop = rep(0,length(HPop$nInf))
+  for (i in 1:length(HPop$nInf)){
+    movement_adjusted_infectious_prop[i] = sum(((HPop$nInf * TS_matrix[,i]) + exposed_pop_inf_prop * sum(( HPop$nExp * TS_matrix[,i])))) / sum(HPop$nTotal * TS_matrix[,i])
+  }
+  susceptible_vec = round(HPop$nTotal - HPop$nInf - HPop$nExp - HPop$nRec)
+  
+  probability_infection = 1-exp(-exposerate * movement_adjusted_infectious_prop)
+  for (i in 1:length(HPop$nInf)){
+    susceptible_weighted_pop = round(susceptible_vec[i]*TS_matrix[i,])
+    HPop$nExposedToday[i] = round(sum(rbinom(length(susceptible_weighted_pop),size = susceptible_weighted_pop,prob=probability_infection)))
+    if (HPop$nExp[i] + HPop$nExposedToday[i] < HPop$nTotal[i] - HPop$nInf[i] - HPop$nRec[i] ) {
+      HPop$nExp[i] = HPop$nExp[i] + HPop$nExposedToday[i]
+      
+    } else {
+      HPop$nExposedToday[i] = HPop$nTotal[i] - HPop$nInf[i] - HPop$nExp[i]- HPop$nRec[i]
+      HPop$nExp[i]  = HPop$nTotal[i] - HPop$nInf[i] - HPop$nRec[i]
+      
+    }
+  }
+  
+  #print(paste0("Number of people newly exposed: ",sum(HPop$nExposedToday)))
+  HPop
+}
+
+
+
+####### Activity functions: Human movement ####
+movementTimeStep = function(HPop, mobmat,day,control_df,prob_move_per_TS){
+  movement_matrix = matrix(0,NPat,NPat,dimnames=list(patIDs,patIDs))
+  daily_move = subset(mobmat,date == day)
+  
+  daily_move = subset(daily_move,!is.na(fr_pat) & !is.na(to_pat) & !is.na(fr_users) & !is.na(movers))
+  
+  daily_move_mat = daily_move[,is.element(names(daily_move),c("fr_pat","to_pat","fr_users","movers"))]
+  daily_move_mat = as.matrix(daily_move_mat)
+  col1 = which(colnames(daily_move_mat) == "fr_pat")
+  col2=which(colnames(daily_move_mat) == "to_pat")
+  
+  colmove = which(colnames(daily_move_mat) == "movers")
+  colusers=which(colnames(daily_move_mat) == "fr_users")
+  movement_matrix[daily_move_mat[,c(col1,col2)]] = daily_move_mat[,colmove]/daily_move_mat[,colusers]
+  if (length(which(rowSums(movement_matrix)>1)) > 0){
+    print("Warning: row sums > 1 in movement matrix. Correcting...")
+    correctingrows = which(rowSums(movement_matrix)>1)
+    for (i in correctingrows){
+    movement_matrix[i,] = movement_matrix[i,] /sum(movement_matrix[i,] )
+    }
+  }
+  if (prob_move_per_TS > 0){
+    movement_matrix = movement_matrix*prob_move_per_TS
+  }
+  for (i in 1:length(patIDs)){
+    movement_matrix[i,i] = 1 - sum(movement_matrix[i,-i])
+  }
+  
+  HPop$controlled = rep(0,length(HPop$names))
+  if (length(which(control_df$date == day)) > 0){
+    control_df_sub = subset(control_df,date == day)
+    if (dim(control_df_sub)[1] > 0){
+    for (i in 1:dim(control_df_sub)[1]){
+      HPop$controlled[which(HPop$names == control_df_sub$from[i])] = control_df_sub$relative_move[i]
+      
+    }
+  }
+  }
+  if (sum(HPop$controlled)>0){
+    movement_matrix = stopMovement(HPop,movement_matrix,day)
+  }
+  #deterministic version
+  #HPop$nInfMovedToday = colSums(diag(HPop$nInf) %*% movement_matrix) - HPop$nInf
+  #HPop$nInf = colSums(diag(HPop$nInf) %*% movement_matrix)
+  HPop$nInf = ceiling(HPop$nInf)
+  # stochastic version
+    z <- rbinom(n=NPat^2,size = rep(HPop$nInf,each=NPat),prob = t(movement_matrix)[])
+  moved_matrix = t(matrix(z,NPat,NPat,dimnames=list(patIDs,patIDs)))
+  for (i in 1:dim(moved_matrix)[1]){
+     if (sum(moved_matrix[i,]) > 0){
+     moved_matrix[i,] = moved_matrix[i,]/sum(moved_matrix[i,]) * HPop$nInf[i]
+     }
+  }
+  HPop$nInfMovedToday = ceiling(colSums(moved_matrix))
+  
+  HPop$nInf = HPop$nInf - floor(rowSums(moved_matrix)) + ceiling(colSums(moved_matrix))
+  #quick fix
+  for (i in 1:length(HPop$nInf)){
+    if (HPop$nInf[i] > HPop$nTotal[i]){
+      HPop$nInf[i] = HPop$nTotal[i]
+    }
+  }
+  
+  #print(paste0("Number of infected people moving: ",sum(abs(HPop$nInfMovedToday))/2))
+  HPop
+}
+
+
+###### Response functions: Control
+#relative_movement is the proportion of original movement out/in that we want to keep -- ie. .1 = 10% of original movement rate
+stopMovement = function(HPop,mobmat,current_date){
+  stopping = which(HPop$controlled > 0)
+    if (length(stopping) > 0){
+     # print(paste("stopping movement in patches", HPop$names[stopping]))
+      for (ctrl_pat in stopping){
+    control_patches = HPop$IDs[ctrl_pat]
+    mobmat[control_patches,] = mobmat[control_patches,] * HPop$controlled[ctrl_pat]
+    mobmat[,control_patches] = mobmat[,control_patches] * HPop$controlled[ctrl_pat]
+    for (i in 1:length(HPop$IDs)){
+      mobmat[i,i] = 1 - sum(mobmat[i,-i])
+    }
+      }
+    }
+    mobmat
+}
+
+
+
+
+###### Master function  ####
+runSim = function(HPop,pat_info,control_info,mobmat,day_list,recrate_values,exposerate_df,exposepd,exposed_pop_inf_prop = 0,TSinday = 1,prob_move_per_TS=0) {
+  
+  
+  epidemic_curve <- data.frame(Date=as.Date(character()),
+                               inf=c(),
+                               stringsAsFactors=FALSE) 
+  
+  if (TSinday > 1){
+    #recrate_values$recrate = 1-(1-recrate_values$recrate)^(1/TSinday)
+    exposetoinfrate = 1/exposepd
+    exposepd = 1/(1 - exp(log(1-exposetoinfrate) / TSinday))
+    #recrate_values$recrate = 1 - ((1 - recrate_values$recrate) ^ (1/TSinday))
+    recrate_values$recrate = 1 - exp(log(1-recrate_values$recrate) / TSinday)
+    if (is.numeric(exposerate_df)){
+     # exposerate_df = 1-(1-exposerate_df)^(1/TSinday)
+      exposerate_df = exposerate_df/TSinday      
+     # recrate_values$recrate = 1 - ((1 - recrate_values$recrate) ^ (1/TSinday))
+    }
+    if (is.data.frame(exposerate_df)){
+     # exposerate_df$exposerate = 1-(1-exposerate_df$exposerate)^(1/TSinday)
+      exposerate_df$exposerate = 1 - exp(log(1-exposerate_df$exposerate) / TSinday)
+    }
+  }
+
+  all_spread = matrix(0,length(day_list),length(HPop$nInf))
+  colnames(all_spread) = HPop$names
+  #print(all_dates)
+  for (current_day in 1:length(day_list)){
+    for (current_TS in 1:TSinday){
+    print("Day: ")
+	print(day_list[current_day])
+    HPop = recoveryTimeStep(HPop,recrate_values,day_list[current_day])
+    HPop = exposedtoinfTimeStep(HPop,1/exposepd)
+    HPop = exposedTimeStep(HPop,exposerate_df, day_list[current_day], exposed_pop_inf_prop)
+    
+    HPop = movementTimeStep(HPop,mobmat,day_list[current_day],control_info,prob_move_per_TS)
+    }
+    #save(HPop,file=paste(current_day,".RData"))
+    epidemic_curve = rbind(epidemic_curve,data.frame(Date = day_list[current_day], inf = sum(HPop$nInf)))
+    all_spread[current_day,] = HPop$nInf
+    
+  }
+  all_spread_2 = data.frame(dates = day_list,runday = 1:length(day_list))
+  all_spread_2= cbind(all_spread_2,all_spread)
+  list(HPop = HPop,epidemic_curve = epidemic_curve,all_spread=all_spread_2)
+}
+
+
+runSim_timespent = function(HPop,pat_info,control_info,TS_data,day_list,recrate_values,exposerate_df,exposepd,exposed_pop_inf_prop = 0,TSinday = 1) {
+  
+  
+  epidemic_curve <- data.frame(Date=as.Date(character()),
+                               inf=c(),
+                               stringsAsFactors=FALSE) 
+  
+  if (TSinday > 1){
+    #recrate_values$recrate = 1-(1-recrate_values$recrate)^(1/TSinday)
+    exposetoinfrate = 1/exposepd
+    exposepd = 1/(1 - exp(log(1-exposetoinfrate) / TSinday))
+    #recrate_values$recrate = 1 - ((1 - recrate_values$recrate) ^ (1/TSinday))
+    recrate_values$recrate = 1 - exp(log(1-recrate_values$recrate) / TSinday)
+    if (is.numeric(exposerate_df)){
+      # exposerate_df = 1-(1-exposerate_df)^(1/TSinday)
+      exposerate_df = exposerate_df/TSinday      
+      # recrate_values$recrate = 1 - ((1 - recrate_values$recrate) ^ (1/TSinday))
+    }
+    if (is.data.frame(exposerate_df)){
+      # exposerate_df$exposerate = 1-(1-exposerate_df$exposerate)^(1/TSinday)
+      exposerate_df$exposerate = 1 - exp(log(1-exposerate_df$exposerate) / TSinday)
+    }
+  }
+  
+  all_spread = matrix(0,length(day_list),length(HPop$nInf))
+  colnames(all_spread) = HPop$names
+  #print(all_dates)
+  for (current_day in 1:length(day_list)){
+    for (current_TS in 1:TSinday){
+      print(day_list[current_day])
+      HPop = recoveryTimeStep(HPop,recrate_values,day_list[current_day])
+      HPop = exposedtoinfTimeStep(HPop,1/exposepd)
+      HPop = exposedTimeStep_timespent(HPop,exposerate_df, day_list[current_day], exposed_pop_inf_prop,TS_data)
+    }
+    #save(HPop,file=paste(current_day,".RData"))
+    epidemic_curve = rbind(epidemic_curve,data.frame(Date = day_list[current_day], inf = sum(HPop$nInf)))
+    all_spread[current_day,] = HPop$nInf
+    
+  }
+  all_spread_2 = data.frame(dates = day_list,runday = 1:length(day_list))
+  all_spread_2= cbind(all_spread_2,all_spread)
+  list(HPop = HPop,epidemic_curve = epidemic_curve,all_spread=all_spread_2)
+}
+```
+
