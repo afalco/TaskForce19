@@ -7,6 +7,7 @@ output: pdf_document
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
+knitr::opts_chunk$set(fig.width=12, fig.height=8)
 ```
 
 
@@ -338,7 +339,7 @@ exposerate = 2.68/6 # R0 of 2.68, 5.8 days till seeking treatment
 exposepd = 5.1 # incubation period
 ```
 
-## Model runnig
+## Model running
 
 ```{r}
 #run_model_ComVal.R
@@ -351,13 +352,14 @@ library(lubridate)
 # setwd('D:/OneDrive - University of Southampton/Wuhan Coronavirus R0/Spread risk')
 #setwd('C:/Users/sl4m18/OneDrive - University of Southampton/Wuhan Coronavirus R0/Spread risk')
 
+
 source("bearmod_fx.R")
 # source("bearmod/bearmod_fx.R")
 source("preprocess_ComVal.R")
 #Initial parameters
 NPat = length(patNames)
 patnInf = rep(0,NPat)
-patnExp = c(rep(0,NPat))
+patnExp = c(rep(0,NPat) )
 
 #pat_locator$pop = 4941509
 #three provinces 
@@ -384,6 +386,7 @@ relative_move_data = data.frame()
 #relative_move_data$date = ymd("2020-02-25")+30 
  
 #### Running the model  ####
+
 HPop = InitiatePop(pat_locator,patnInf,patnExp)
 ###dates of simulation
 
@@ -397,30 +400,41 @@ input_dates = seq(from=min(movement_data$date),to=max(movement_data$date),by="da
 # input_dates = seq(date("2013-12-02"),date("2014-2-27"),by="days") # coresponding to the period from 2020-12-08 to 4 wks after LNY's day
 results = list()
 
-HPop_update2 <- runSim(HPop,pat_locator,relative_move_data,movement_data, input_dates,recover_df, exposerate,exposepd,exposed_pop_inf_prop = 0, TSinday = 1)
-run <- 1
-results[[run]] <- HPop_update2$all_spread
+HPop_update2 = runSim(HPop,pat_locator,relative_move_data,movement_data, input_dates,recover_df, exposerate,exposepd,exposed_pop_inf_prop = 0, TSinday = 1)
+run=1
+results[[run]] = HPop_update2$all_spread
 onerun <- data.frame(results[run])
 
-#Visualising results
-# for (run in 1:2){
-#   
-#   HPop_update2 = runSim(HPop,pat_locator,relative_move_data,movement_data, input_dates,recover_df, exposerate,exposepd,exposed_pop_inf_prop = 0, TSinday = 1)
-#   #print(paste0("Run # ",run))
-#   results[[run]] = HPop_update2$all_spread
-# }
 
-# this is just one run of the model instance 10 
-onerun <- data.frame(results[run])
-
-#plot 
-#infected 
-plot(onerun$X3)
-onerun$X3[35:50]
-
-save(results,file="results_ComVal.RData")
-# 
+for (run in 1:2){
+  
+  HPop_update2 = runSim(HPop,pat_locator,relative_move_data,movement_data, input_dates,recover_df, exposerate,exposepd,exposed_pop_inf_prop = 0, TSinday = 1)
+  #print(paste0("Run # ",run))
+  results[[run]] = HPop_update2$all_spread
+}
+#######################
+# Store simulation data
+#######################
+results <- as.data.frame(results)
+write.table(results,file="simulation.csv",sep = "\t", row.names = F)
 ```
+
+```{r}
+######################
+# Plot simulation data 
+######################
+X4 <- 4941509 - (results$X1+results$X2+results$X3)
+par(mfrow=c(2,2))
+plot(results$X1~as.Date(results$dates,"%y/%m/%d"),
+      type='p',col="blue",ylab="X1", xlab="Date")
+plot(results$X2~as.Date(results$dates,"%y/%m/%d"),
+      type='p',col="blue",ylab="X2", xlab="Date")
+plot(results$X3~as.Date(results$dates,"%y/%m/%d"),
+      type='p',col="blue",ylab="X3", xlab="Date")
+plot(X4~as.Date(results$dates,"%y/%m/%d"),
+     type='p',col="blue",ylab="S", xlab="Date")
+```
+
 
 ## The core model file
 ```{r}

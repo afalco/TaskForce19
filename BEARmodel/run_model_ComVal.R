@@ -67,16 +67,28 @@ for (run in 1:2){
   #print(paste0("Run # ",run))
   results[[run]] = HPop_update2$all_spread
 }
-
+#######################
+# Store simulation data
+#######################
+results <- as.data.frame(results)
+write.table(results,file="simulation.csv",sep = "\t", row.names = F)
+######################
+# Plot simulation data 
+######################
+par(mfrow=c(2,2))
+plot(results$inf_1~as.Date(results$dates,"%y/%m/%d"),
+      type='l',col="blue",ylab="I", xlab="Date")
+plot(results$exp_1~as.Date(results$dates,"%y/%m/%d"),
+      type='l',col="blue",ylab="E", xlab="Date")
+plot(results$rec_1~as.Date(results$dates,"%y/%m/%d"),
+      type='l',col="blue",ylab="R", xlab="Date")
+plot(results$sus_1~as.Date(results$dates,"%y/%m/%d"),
+     type='l',col="blue",ylab="S", xlab="Date")
 # this is just one run of the model instance 10 
-onerun <- data.frame(results[run])
-
+#onerun <- data.frame(results[run])
 #plot 
 #infected 
-plot(onerun$X3)
-onerun$X3[35:50]
-
-
-
-save(results,file="results_ComVal.RData")
+#plot(onerun$X3)
+#onerun$X3[35:50]
+#save(results,file="results_ComVal.RData")
 # 

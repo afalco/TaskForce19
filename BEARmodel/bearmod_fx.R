@@ -75,27 +75,27 @@ InitiatePop = function(pat_locator,initialInf,initialExp){
 recoveryTimeStep = function(HPop, recrate_values,current_day){
   recrate = subset(recrate_values,date == current_day)$recrate
 
-  print(paste0("Day ",current_day, " recovery rate: ", recrate))
+  # modificado print(paste0("Day ",current_day, " recovery rate: ", recrate))
   for (i in 1:length(HPop$nInf)){
   HPop$nRecoveredToday[i]= sum(rbinom(HPop$nInf[i],1,recrate))
   HPop$nInf[i] = HPop$nInf[i] - HPop$nRecoveredToday[i]
   HPop$nRec[i] = HPop$nRec[i] + HPop$nRecoveredToday[i]
   
   }
-  print(paste0("Number of people recovering: ",sum(HPop$nRecoveredToday)))
+  # modificado print(paste0("Number of people recovering: ",sum(HPop$nRecoveredToday)))
   HPop
 }
 
 exposedtoinfTimeStep = function(HPop, exp_to_infrate){
   #(exp_to_infrate)
   for (i in 1:length(HPop$nInf)){
-    print(HPop$nExposedToday[i])
-    print(HPop$nExp[i])
+    #modificado print(HPop$nExposedToday[i])
+    #modificado print(HPop$nExp[i])
     HPop$nInfectedToday[i]= sum(rbinom(HPop$nExp[i],1,exp_to_infrate))
     HPop$nInf[i] = HPop$nInf[i] + HPop$nInfectedToday[i]
     HPop$nExp[i] = HPop$nExp[i] - HPop$nInfectedToday[i]
   }
-  print(paste0("Number of people newly infectious: ",sum(HPop$nInfectedToday)))
+  #modificado print(paste0("Number of people newly infectious: ",sum(HPop$nInfectedToday)))
   HPop
 }
 
@@ -123,7 +123,7 @@ exposedTimeStep = function(HPop, exposerate_df, current_day, exposed_pop_inf_pro
       
     }
   }
-  print(paste0("Number of people newly exposed: ",sum(HPop$nExposedToday)))
+  #modificado print(paste0("Number of people newly exposed: ",sum(HPop$nExposedToday)))
   HPop
 }
 
@@ -273,16 +273,12 @@ stopMovement = function(HPop,mobmat,current_date){
 }
 
 
-
-
 ###### Master function  ####
-runSim = function(HPop,pat_info,control_info,mobmat,day_list,recrate_values,exposerate_df,exposepd,exposed_pop_inf_prop = 0,TSinday = 1,prob_move_per_TS=0) {
-  
-  
+runSim = function(HPop,pat_info,control_info,mobmat,day_list,recrate_values,exposerate_df
+  ,exposepd,exposed_pop_inf_prop = 0,TSinday = 1,prob_move_per_TS=0) {
   epidemic_curve <- data.frame(Date=as.Date(character()),
                                inf=c(),
                                stringsAsFactors=FALSE) 
-  
   if (TSinday > 1){
     #recrate_values$recrate = 1-(1-recrate_values$recrate)^(1/TSinday)
     exposetoinfrate = 1/exposepd
@@ -299,34 +295,34 @@ runSim = function(HPop,pat_info,control_info,mobmat,day_list,recrate_values,expo
       exposerate_df$exposerate = 1 - exp(log(1-exposerate_df$exposerate) / TSinday)
     }
   }
-
-  all_spread = matrix(0,length(day_list),length(HPop$nInf))
-  colnames(all_spread) = HPop$names
+  all_spread <- matrix(0, length(day_list), 4 * length(HPop$nInf))
+  colnames(all_spread) = c(paste0('inf_', HPop$names), paste0('rec_', HPop$names), 
+                           paste0('exp_', HPop$names), paste0('sus_', HPop$names))
   #print(all_dates)
-  for (current_day in 1:length(day_list)){
-    for (current_TS in 1:TSinday){
-    print("Day: ")
-	print(day_list[current_day])
-    HPop = recoveryTimeStep(HPop,recrate_values,day_list[current_day])
-    HPop = exposedtoinfTimeStep(HPop,1/exposepd)
-    HPop = exposedTimeStep(HPop,exposerate_df, day_list[current_day], exposed_pop_inf_prop)
-    
-    HPop = movementTimeStep(HPop,mobmat,day_list[current_day],control_info,prob_move_per_TS)
+  for (current_day in 1:length(day_list)) {
+    for (current_TS in 1:TSinday) {
+      # print("Day: ")
+      # print(day_list[current_day])
+      HPop = recoveryTimeStep(HPop, recrate_values, day_list[current_day])
+      HPop = exposedtoinfTimeStep(HPop, 1 / exposepd)
+      HPop = exposedTimeStep(HPop, exposerate_df, day_list[current_day], exposed_pop_inf_prop)
+      HPop = movementTimeStep(HPop, mobmat, day_list[current_day], control_info, prob_move_per_TS)
     }
     #save(HPop,file=paste(current_day,".RData"))
     epidemic_curve = rbind(epidemic_curve,data.frame(Date = day_list[current_day], inf = sum(HPop$nInf)))
-    all_spread[current_day,] = HPop$nInf
-    
+    all_spread[current_day, 1:3] <- HPop$nInf
+    all_spread[current_day, 4:6] <- HPop$nRec
+    all_spread[current_day, 7:9] <- HPop$nExp
+    all_spread[current_day, 10:12] <- HPop$nTotal - HPop$nInf - HPop$nRec - HPop$nExp
   }
   all_spread_2 = data.frame(dates = day_list,runday = 1:length(day_list))
-  all_spread_2= cbind(all_spread_2,all_spread)
+  all_spread_2 = cbind(all_spread_2,all_spread)
   list(HPop = HPop,epidemic_curve = epidemic_curve,all_spread=all_spread_2)
 }
 
 
-runSim_timespent = function(HPop,pat_info,control_info,TS_data,day_list,recrate_values,exposerate_df,exposepd,exposed_pop_inf_prop = 0,TSinday = 1) {
-  
-  
+runSim_timespent = function(HPop,pat_info,control_info,TS_data,day_list,
+  recrate_values,exposerate_df,exposepd,exposed_pop_inf_prop = 0,TSinday = 1) {  
   epidemic_curve <- data.frame(Date=as.Date(character()),
                                inf=c(),
                                stringsAsFactors=FALSE) 
@@ -353,7 +349,7 @@ runSim_timespent = function(HPop,pat_info,control_info,TS_data,day_list,recrate_
   #print(all_dates)
   for (current_day in 1:length(day_list)){
     for (current_TS in 1:TSinday){
-      print(day_list[current_day])
+      #modificado print(day_list[current_day]) 
       HPop = recoveryTimeStep(HPop,recrate_values,day_list[current_day])
       HPop = exposedtoinfTimeStep(HPop,1/exposepd)
       HPop = exposedTimeStep_timespent(HPop,exposerate_df, day_list[current_day], exposed_pop_inf_prop,TS_data)
