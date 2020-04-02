@@ -75,7 +75,7 @@ write.table(results,file="simulation.csv",sep = "\t", row.names = F)
 ######################
 # Plot simulation data 
 ######################
-par(mfrow=c(2,2))
+par(mfrow=c(2,2),oma = c(0, 0, 2, 0))
 plot(results$inf_1~as.Date(results$dates,"%y/%m/%d"),
       type='l',col="blue",ylab="I", xlab="Date")
 plot(results$exp_1~as.Date(results$dates,"%y/%m/%d"),
@@ -84,6 +84,7 @@ plot(results$rec_1~as.Date(results$dates,"%y/%m/%d"),
       type='l',col="blue",ylab="R", xlab="Date")
 plot(results$sus_1~as.Date(results$dates,"%y/%m/%d"),
      type='l',col="blue",ylab="S", xlab="Date")
+mtext("Castellon", outer = TRUE, cex = 1.5)
 # this is just one run of the model instance 10 
 #onerun <- data.frame(results[run])
 #plot 

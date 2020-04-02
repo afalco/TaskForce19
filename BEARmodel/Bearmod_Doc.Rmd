@@ -423,16 +423,41 @@ write.table(results,file="simulation.csv",sep = "\t", row.names = F)
 ######################
 # Plot simulation data 
 ######################
-X4 <- 4941509 - (results$X1+results$X2+results$X3)
-par(mfrow=c(2,2))
-plot(results$X1~as.Date(results$dates,"%y/%m/%d"),
-      type='p',col="blue",ylab="X1", xlab="Date")
-plot(results$X2~as.Date(results$dates,"%y/%m/%d"),
-      type='p',col="blue",ylab="X2", xlab="Date")
-plot(results$X3~as.Date(results$dates,"%y/%m/%d"),
-      type='p',col="blue",ylab="X3", xlab="Date")
-plot(X4~as.Date(results$dates,"%y/%m/%d"),
-     type='p',col="blue",ylab="S", xlab="Date")
+par(mfrow=c(2,2),oma = c(0, 0, 2, 0))
+plot(results$inf_1~as.Date(results$dates,"%y/%m/%d"),main = "Number of infections \n actively circulating", type='l',col="blue",ylab="I", xlab="Date")
+plot(results$exp_1~as.Date(results$dates,"%y/%m/%d"),
+      type='l',col="blue",ylab="E", xlab="Date",main="Population currently in incubation")
+plot(results$rec_1~as.Date(results$dates,"%y/%m/%d"),
+      type='l',col="blue",ylab="R", xlab="Date",main="Population no longer infectious \n due to isolation or immunity")
+plot(results$sus_1~as.Date(results$dates,"%y/%m/%d"),type='l',col="blue",
+  ylab="S", xlab="Date",main="Population not immune to disease")
+mtext("Castellon", outer = TRUE, cex = 1.5)
+
+######################
+# Plot simulation data 
+######################
+par(mfrow=c(2,2),oma = c(0, 0, 2, 0))
+plot(results$inf_2~as.Date(results$dates,"%y/%m/%d"),main = "Number of infections \n actively circulating", type='l',col="blue",ylab="I", xlab="Date")
+plot(results$exp_2~as.Date(results$dates,"%y/%m/%d"),
+      type='l',col="blue",ylab="E", xlab="Date",main="Population currently in incubation")
+plot(results$rec_2~as.Date(results$dates,"%y/%m/%d"),
+      type='l',col="blue",ylab="R", xlab="Date",main="Population no longer infectious \n due to isolation or immunity")
+plot(results$sus_2~as.Date(results$dates,"%y/%m/%d"),type='l',col="blue",
+  ylab="S", xlab="Date",main="Population not immune to disease")
+mtext("Valencia", outer = TRUE, cex = 1.5)
+
+######################
+# Plot simulation data 
+######################
+par(mfrow=c(2,2),oma = c(0, 0, 2, 0))
+plot(results$inf_3~as.Date(results$dates,"%y/%m/%d"),main = "Number of infections \n actively circulating", type='l',col="blue",ylab="I", xlab="Date")
+plot(results$exp_3~as.Date(results$dates,"%y/%m/%d"),
+      type='l',col="blue",ylab="E", xlab="Date",main="Population currently in incubation")
+plot(results$rec_3~as.Date(results$dates,"%y/%m/%d"),
+      type='l',col="blue",ylab="R", xlab="Date",main="Population no longer infectious \n due to isolation or immunity")
+plot(results$sus_3~as.Date(results$dates,"%y/%m/%d"),type='l',col="blue",
+  ylab="S", xlab="Date",main="Population not immune to disease")
+mtext("Alicante", outer = TRUE, cex = 1.5)
 ```
 
 
