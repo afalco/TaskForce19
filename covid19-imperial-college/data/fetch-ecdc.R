@@ -21,7 +21,7 @@ error = function(e) {
 # Datos de la comunidad valenciana
 system("python data/covid19_cv.py")
 
-cv <- read.csv("data/cv_covid19.csv", stringsAsFactors = FALSE)
+cv_df <- read.csv("data/cv_covid19.csv", stringsAsFactors = FALSE)
 
 # dateRep day month year cases deaths countriesAndTerritories geoId countryterritoryCode popData2018
 d <- read.csv("data/COVID-19-up-to-date.csv", stringsAsFactors = FALSE)

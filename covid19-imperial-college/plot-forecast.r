@@ -19,14 +19,13 @@ make_forecast_plot <- function(){
   
   args <- commandArgs(trailingOnly = TRUE)
   filename <- args[1]
-  filename <- 'base-976868.Rdata'
+  # filename <- 'base-976868.Rdata'
   
   load(paste0("results/", filename))
   
   data_interventions <- read.csv("data/interventions.csv", stringsAsFactors = FALSE)
   
-  #for(i in 1:12){
-    i = 4
+  for(i in 1:12){
     N <- length(dates[[i]])
     N2 <- N + 7
     country <- countries[[i]]
@@ -83,7 +82,7 @@ make_forecast_plot <- function(){
                      filename = filename,
                      country = country)
     
-  #}
+  }
 }
 
 make_single_plot <- function(data_country, data_country_forecast, filename, country){

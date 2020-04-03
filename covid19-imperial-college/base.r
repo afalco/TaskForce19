@@ -71,6 +71,7 @@ deaths_by_country = list()
 
 
 for(Country in countries) {
+#  Country = 'Spain'
   CFR=cfr.by.country$weighted_fatality[cfr.by.country$country == Country]
   
   covariates1 <- covariates[covariates$Country == Country, 2:8]
@@ -248,4 +249,5 @@ g = (mcmc_intervals(Rt,prob = .9))
 ggsave(sprintf("results/%s-covars-final-rt.pdf",filename),g,width=4,height=6)
 system(paste0("Rscript plot-3-panel.r ", filename,'.Rdata'))
 system(paste0("Rscript plot-forecast.r ",filename,'.Rdata')) ## to run this code you will need to adjust manual values of forecast required
-  
+
+filename
