@@ -1,0 +1,66 @@
+---
+title: "Generate CV predictions"
+author: "E. Sansano"
+date: "02/04/2020"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE)
+```
+
+## Update Infection data
+
+This script `fetch-ecdc.R` updates the data for all countries and CV:
+
+```{r update, echo=FALSE, message=FALSE, warning=FALSE, include=FALSE}
+source('data/fetch-ecdc.R')
+```
+
+## Generate forecasts for all countries:
+
+This script `base.r` generates forecasts for all countries and CV:
+
+```{r forecast, echo=FALSE, message=FALSE, warning=FALSE, include=FALSE}
+source('base.r')
+```
+
+\newpage
+
+## Comunitat Valenciana: Impact of NPIs
+
+```{r, out.width="1.0\\linewidth", include=TRUE, fig.align="center", fig.cap=c("Comunitat Valenciana"), echo=FALSE}
+fname = paste0('figures/Comunitat_Valenciana_three_pannel_', filename, '.Rdata.pdf')
+knitr::include_graphics(fname)
+```
+
+## Comunitat Valenciana: Deaths forecast
+
+```{r, out.width="0.80\\linewidth", include=TRUE, fig.align="center", fig.cap=c("CV Deaths forecast"), echo=FALSE}
+fname = paste0('figures/Comunitat_Valenciana_forecast_', filename, '.Rdata.pdf')
+knitr::include_graphics(fname)
+```
+
+
+\newpage
+## Spain: Impact of NPIs
+
+```{r, out.width="1.0\\linewidth", include=TRUE, fig.align="center", fig.cap=c("Spain"), echo=FALSE}
+fname = paste0('figures/Spain_three_pannel_', filename, '.Rdata.pdf')
+knitr::include_graphics(fname)
+```
+
+\newpage
+## Spain: Deaths forecast
+
+```{r, out.width="0.80\\linewidth", include=TRUE, fig.align="center", fig.cap=c("Spain deaths forecast"), echo=FALSE}
+fname = paste0('figures/Spain_forecast_', filename, '.Rdata.pdf')
+knitr::include_graphics(fname)
+```
+
+
+
+
+
+
+
