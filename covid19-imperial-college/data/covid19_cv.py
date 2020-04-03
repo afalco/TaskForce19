@@ -37,10 +37,10 @@ if __name__ == '__main__':
         cases = df_cv.loc[mask, 'cases']
         df_cv.loc[mask, 'deaths'] = deaths
 
-    df_cv['dateRep'] = df_cv['dateRep'].apply(lambda x: x.replace('-', '/'))
-    df_cv['year'] = df_cv['dateRep'].apply(lambda x: f'{int(x[:4]):02d}')
-    df_cv['month'] = df_cv['dateRep'].apply(lambda x: f'{int(x[5:7]):02d}')
-    df_cv['day'] = df_cv['dateRep'].apply(lambda x: f'{int(x[8:]):02d}')
+    df_cv['dateRep'] = df_cv['dateRep'].apply(lambda x: f'{x[8:]}/{x[5:7]}/{x[:4]}')
+    df_cv['year'] = df_cv['dateRep'].apply(lambda x: f'{int(x[6:]):02d}')
+    df_cv['month'] = df_cv['dateRep'].apply(lambda x: f'{int(x[3:5]):02d}')
+    df_cv['day'] = df_cv['dateRep'].apply(lambda x: f'{int(x[:2]):02d}')
 
     df_cv['countriesAndTerritories'] = 'Comunitat_Valenciana'
     df_cv['geoId'] = 'CV'
