@@ -29,7 +29,8 @@ patnInf[which(patNames == 2)] = 25
 patnInf[which(patNames == 3)] = 5
 
 #recovery rate variable for each available day 
-recover_df = data.frame(date = seq(from=min(movement_data$date),to=max(movement_data$date),by="days"),recrate = recrate)
+recover_df = data.frame(date = seq(from=min(movement_data$date),to=max(movement_data$date),by="days")
+	,recrate = recrate)
 
 ##load a new mobility scenario 
 relative_move_df=data.frame()
@@ -59,7 +60,6 @@ HPop_update2 = runSim(HPop,pat_locator,relative_move_data,movement_data, input_d
 run=1
 results[[run]] = HPop_update2$all_spread
 onerun <- data.frame(results[run])
-
 
 for (run in 1:2){
   

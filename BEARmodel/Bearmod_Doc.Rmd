@@ -322,7 +322,6 @@ patIDs = 1:length(patNames)
 pat_locator = data.frame(patNames,patIDs)
 #convert dates to format R can read
 movement_data$date = ymd("2020-02-25")+movement_data$date
-
 # 
 # missing_dates = c(date("2014-1-17"), date("2014-2-2"),date("2014-2-18"),date("2014-2-20")
 #     date("2014-3-1"),date("2014-3-2"))
@@ -394,21 +393,20 @@ HPop = InitiatePop(pat_locator,patnInf,patnExp)
 #input_dates=append(input_dates,rep("2020-03-27",15))
 #input_dates=append(input_dates,rep("2020-04-11",50))
 input_dates = seq(from=min(movement_data$date),to=max(movement_data$date),by="days") # unique(movement_data$date)
-
 #input_dates = seq(from=min(movement_data$date),to=max(movement_data$date),by="days")
-#input_dates = seq(date("2020-02-26"),date("2020-4-26"),by="days") # coresponding to the period from 2020-12-08 to 2 wks after LNY's day 
-# input_dates = seq(date("2013-12-02"),date("2014-2-27"),by="days") # coresponding to the period from 2020-12-08 to 4 wks after LNY's day
+#input_dates = seq(date("2020-02-26"),date("2020-4-26"),by="days") 
+# coresponding to the period from 2020-12-08 to 2 wks after LNY's day 
+# input_dates = seq(date("2013-12-02"),date("2014-2-27"),by="days") 
+# coresponding to the period from 2020-12-08 to 4 wks after LNY's day
 results = list()
 
-HPop_update2 = runSim(HPop,pat_locator,relative_move_data,movement_data, input_dates,recover_df, exposerate,exposepd,exposed_pop_inf_prop = 0, TSinday = 1)
+HPop_update2 = runSim(HPop,pat_locator,relative_move_data,movement_data, input_dates,recover_df, exposerate,exposepd,exposed_pop_inf_prop = 0, TSinday = 0)
 run=1
 results[[run]] = HPop_update2$all_spread
 onerun <- data.frame(results[run])
 
-
 for (run in 1:2){
-  
-  HPop_update2 = runSim(HPop,pat_locator,relative_move_data,movement_data, input_dates,recover_df, exposerate,exposepd,exposed_pop_inf_prop = 0, TSinday = 1)
+  HPop_update2 = runSim(HPop,pat_locator,relative_move_data,movement_data, input_dates,recover_df, exposerate,exposepd,exposed_pop_inf_prop = 0, TSinday = 0)
   #print(paste0("Run # ",run))
   results[[run]] = HPop_update2$all_spread
 }
@@ -606,7 +604,6 @@ exposedTimeStep_timespent = function(HPop, exposerate_df, current_day, exposed_p
 
 ####### Activity functions: Human movement ####
 movementTimeStep = function(HPop, mobmat,day,control_df,prob_move_per_TS){
-  
   # Crea una matrix de nPatches x nPatches
   movement_matrix = matrix(0,NPat,NPat,dimnames=list(patIDs,patIDs))
   # Obtiene el subconjunto de movimientos del dia actual
@@ -651,12 +648,11 @@ movementTimeStep = function(HPop, mobmat,day,control_df,prob_move_per_TS){
     # Comprueba si el filtrado ha devuelto filas
     if (dim(control_df_sub)[1] > 0){
     # Pone en cada entrada (patch) del vector de movilidad controlada el ratio a aplicar
-    for (i in 1:dim(control_df_sub)[1]){
+      for (i in 1:dim(control_df_sub)[1]){
       HPop$controlled[which(HPop$names == control_df_sub$from[i])] = control_df_sub$relative_move[i]
-      
     }
   }
-  }
+}
   # En caso de haber control de movilidad, se aplica la reduccion de movilidad con stopMovement
   if (sum(HPop$controlled)>0){
     movement_matrix = stopMovement(HPop,movement_matrix,day)
@@ -692,7 +688,6 @@ movementTimeStep = function(HPop, mobmat,day,control_df,prob_move_per_TS){
       HPop$nInf[i] = HPop$nTotal[i]
     }
   }
-  
   #print(paste0("Number of infected people moving: ",sum(abs(HPop$nInfMovedToday))/2))
   HPop
 }
@@ -721,12 +716,9 @@ stopMovement = function(HPop,mobmat,current_date){
 # Revisado has aquí 1 de Abril 2020
 ###### Master function  ################
 runSim = function(HPop,pat_info,control_info,mobmat,day_list,recrate_values,exposerate_df,exposepd,exposed_pop_inf_prop = 0,TSinday = 1,prob_move_per_TS=0) {
-  
-  
   epidemic_curve <- data.frame(Date=as.Date(character()),
                                inf=c(),
-                               stringsAsFactors=FALSE) 
-  
+                               stringsAsFactors=FALSE)  
   if (TSinday > 1){
     #recrate_values$recrate = 1-(1-recrate_values$recrate)^(1/TSinday)
     exposetoinfrate = 1/exposepd
@@ -743,14 +735,13 @@ runSim = function(HPop,pat_info,control_info,mobmat,day_list,recrate_values,expo
       exposerate_df$exposerate = 1 - exp(log(1-exposerate_df$exposerate) / TSinday)
     }
   }
-
   all_spread = matrix(0,length(day_list),length(HPop$nInf))
   colnames(all_spread) = HPop$names
   #print(all_dates)
   for (current_day in 1:length(day_list)){
     for (current_TS in 1:TSinday){
-    print("Day: ")
-	print(day_list[current_day])
+    #print("Day: ")
+	  #print(day_list[current_day])
     HPop = recoveryTimeStep(HPop,recrate_values,day_list[current_day])
     HPop = exposedtoinfTimeStep(HPop,1/exposepd)
     HPop = exposedTimeStep(HPop,exposerate_df, day_list[current_day], exposed_pop_inf_prop)
