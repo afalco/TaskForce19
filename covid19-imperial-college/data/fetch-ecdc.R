@@ -1,6 +1,5 @@
 library(lubridate)
 # library(readxl)
-
 # date_offset <- 0
 url <- "https://opendata.ecdc.europa.eu/covid19/casedistribution/csv"
 # date_iso <- as.character(Sys.Date() - date_offset)
@@ -8,7 +7,7 @@ url <- "https://opendata.ecdc.europa.eu/covid19/casedistribution/csv"
 
 url_page <- "https://www.ecdc.europa.eu/en/publications-data/download-todays-data-geographic-distribution-covid-19-cases-worldwide"
 tryCatch({
-  code <- download.file(url, "data/COVID-19-up-to-date.csv")
+  code <- download.file(url, "csv")
   if (code != 0) {
     stop("Error downloading file")
   }
@@ -19,12 +18,13 @@ error = function(e) {
 })
 
 # Datos de la comunidad valenciana
+setwd("~/Users/afalco/Dropbox/Github/TaskForce19/covid19-imperial-college/")
 system("python data/covid19_cv.py")
 
 cv_df <- read.csv("data/cv_covid19.csv", stringsAsFactors = FALSE)
 
 # dateRep day month year cases deaths countriesAndTerritories geoId countryterritoryCode popData2018
-d <- read.csv("data/COVID-19-up-to-date.csv", stringsAsFactors = FALSE)
+d <- read.csv("csv", stringsAsFactors = FALSE)
 d <- rbind(d, cv_df)
 
 d$t <- lubridate::decimal_date(as.Date(d$dateRep, format = "%d/%m/%Y"))

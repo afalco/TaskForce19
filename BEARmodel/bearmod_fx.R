@@ -47,7 +47,6 @@
 #
 #
 ######
-
 library(lubridate)
 
 #This function creates the starting population
@@ -252,7 +251,6 @@ movementTimeStep = function(HPop, mobmat,day,control_df,prob_move_per_TS){
   #print(paste0("Number of infected people moving: ",sum(abs(HPop$nInfMovedToday))/2))
   HPop
 }
-
 
 ###### Response functions: Control
 #relative_movement is the proportion of original movement out/in that we want to keep -- ie. .1 = 10% of original movement rate

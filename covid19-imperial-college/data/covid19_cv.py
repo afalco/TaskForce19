@@ -48,4 +48,5 @@ if __name__ == '__main__':
     df_cv['popData2018'] = 5003769
 
     df_cv = df_cv[['dateRep', 'day', 'month', 'year', 'cases', 'deaths', 'countriesAndTerritories', 'geoId', 'countryterritoryCode', 'popData2018']]
-    df_cv.to_csv('data/cv_covid19.csv', index=False)
+    df_cv.to_csv('cv_covid19.csv', index=False)
+
