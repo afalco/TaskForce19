@@ -1,9 +1,9 @@
-This is pdfTeX, Version 3.14159265-2.6-1.40.18 (TeX Live 2017) (preloaded format=pdflatex 2018.2.17)  31 MAR 2020 20:25
+This is pdfTeX, Version 3.14159265-2.6-1.40.18 (TeX Live 2017) (preloaded format=pdflatex 2018.2.17)  5 APR 2020 10:32
 entering extended mode
  restricted \write18 enabled.
  %&-line parsing enabled.
-**/Users/afalco/Dropbox/COVID-19/SEIR_Model/SEIR_Review.tex
-(/Users/afalco/Dropbox/COVID-19/SEIR_Model/SEIR_Review.tex
+**/Users/afalco/Dropbox/Github/TaskForce19/SEIR_Review.tex
+(/Users/afalco/Dropbox/Github/TaskForce19/SEIR_Review.tex
 LaTeX2e <2017-04-15>
 Babel <3.18> and hyphenation patterns for 84 language(s) loaded.
 (/usr/local/texlive/2017/texmf-dist/tex/latex/base/article.cls
@@ -46,7 +46,7 @@ Package: color 2016/07/10 v1.1e Standard LaTeX Color (DPC)
 File: color.cfg 2016/01/02 v1.6 sample color configuration
 )
 Package color Info: Driver file: pdftex.def on input line 147.
-) (/Users/afalco/Dropbox/COVID-19/SEIR_Model/Sweavel.sty
+) (/Users/afalco/Dropbox/Github/TaskForce19/Sweavel.sty
 Package: Sweavel 
 (/usr/local/texlive/2017/texmf-dist/tex/latex/listings/listings.sty
 \lst@mode=\count87
@@ -877,7 +877,32 @@ LaTeX Font Info:    Overwriting math alphabet `\mathfrak' in version `bold'
 \c@proposition=\count152
 \c@question=\count153
 \c@remark=\count154
-(/Users/afalco/Dropbox/COVID-19/SEIR_Model/SEIR_Review.aux)
+(/Users/afalco/Dropbox/Github/TaskForce19/SEIR_Review.aux
+
+LaTeX Warning: Label `cPSEIR1' multiply defined.
+
+
+LaTeX Warning: Label `cPSEIR2' multiply defined.
+
+
+LaTeX Warning: Label `cPSEIR3' multiply defined.
+
+
+LaTeX Warning: Label `cPSEIR4' multiply defined.
+
+
+LaTeX Warning: Label `cPSEIR1' multiply defined.
+
+
+LaTeX Warning: Label `cPSEIR2' multiply defined.
+
+
+LaTeX Warning: Label `cPSEIR3' multiply defined.
+
+
+LaTeX Warning: Label `cPSEIR4' multiply defined.
+
+)
 \openout1 = `SEIR_Review.aux'.
 
 LaTeX Font Info:    Checking defaults for OML/cmm/m/it on input line 53.
@@ -935,8 +960,8 @@ Package: gettitlestring 2016/05/16 v1.5 Cleanup title references (HO)
 LaTeX Info: Redefining \ref on input line 53.
 LaTeX Info: Redefining \pageref on input line 53.
 LaTeX Info: Redefining \nameref on input line 53.
-(/Users/afalco/Dropbox/COVID-19/SEIR_Model/SEIR_Review.out) (/Users/afalco/Drop
-box/COVID-19/SEIR_Model/SEIR_Review.out)
+(/Users/afalco/Dropbox/Github/TaskForce19/SEIR_Review.out) (/Users/afalco/Dropb
+ox/Github/TaskForce19/SEIR_Review.out)
 \@outlinefile=\write5
 \openout5 = `SEIR_Review.out'.
 
@@ -978,7 +1003,7 @@ Overfull \hbox (12.00409pt too wide) in paragraph at lines 162--163
 ][][][][][][] 
  []
 
-<figure/unnamed-chunk-5-1.pdf, id=87, 505.89pt x 505.89pt>
+<figure/unnamed-chunk-5-1.pdf, id=91, 505.89pt x 505.89pt>
 File: figure/unnamed-chunk-5-1.pdf Graphic file (type pdf)
 <use figure/unnamed-chunk-5-1.pdf>
 Package pdftex.def Info: figure/unnamed-chunk-5-1.pdf  used on input line 182.
@@ -993,8 +1018,7 @@ Underfull \hbox (badness 10000) in paragraph at lines 182--183
 
  []
 
-[4] [5 </Users/afalco/Dropbox/COVID-19/SEIR_Model/figure/unnamed-chunk-5-1.pdf>
-]
+[4] [5 </Users/afalco/Dropbox/Github/TaskForce19/figure/unnamed-chunk-5-1.pdf>]
 LaTeX Font Info:    Font shape `OMS/cmr/m/n' in size <12> not available
 (Font)              Font shape `OMS/cmsy/m/n' tried instead on input line 191.
 [6]
@@ -1009,7 +1033,7 @@ Overfull \hbox (30.00427pt too wide) in paragraph at lines 299--300
 ][][][] 
  []
 
-<figure/unnamed-chunk-9-1.pdf, id=178, 505.89pt x 505.89pt>
+<figure/unnamed-chunk-9-1.pdf, id=182, 505.89pt x 505.89pt>
 File: figure/unnamed-chunk-9-1.pdf Graphic file (type pdf)
 <use figure/unnamed-chunk-9-1.pdf>
 Package pdftex.def Info: figure/unnamed-chunk-9-1.pdf  used on input line 302.
@@ -1024,14 +1048,14 @@ Underfull \hbox (badness 10000) in paragraph at lines 302--303
 
  []
 
-[8] [9 </Users/afalco/Dropbox/COVID-19/SEIR_Model/figure/unnamed-chunk-9-1.pdf>
-] [10]
+[8] [9 </Users/afalco/Dropbox/Github/TaskForce19/figure/unnamed-chunk-9-1.pdf>]
+[10]
 Overfull \hbox (54.00452pt too wide) in paragraph at lines 419--420
 [][][][][][][][][][][][][][][][][][][][][][][][][][][][][][] 
  []
 
 [11]
-<figure/unnamed-chunk-13-1.pdf, id=293, 505.89pt x 505.89pt>
+<figure/unnamed-chunk-13-1.pdf, id=297, 505.89pt x 505.89pt>
 File: figure/unnamed-chunk-13-1.pdf Graphic file (type pdf)
 <use figure/unnamed-chunk-13-1.pdf>
 Package pdftex.def Info: figure/unnamed-chunk-13-1.pdf  used on input line 422.
@@ -1047,40 +1071,46 @@ Underfull \hbox (badness 10000) in paragraph at lines 422--423
 
  []
 
-[12 </Users/afalco/Dropbox/COVID-19/SEIR_Model/figure/unnamed-chunk-13-1.pdf>]
-Package atveryend Info: Empty hook `BeforeClearDocument' on input line 425.
-Package atveryend Info: Empty hook `AfterLastShipout' on input line 425.
-(/Users/afalco/Dropbox/COVID-19/SEIR_Model/SEIR_Review.aux)
-Package atveryend Info: Executing hook `AtVeryEndDocument' on input line 425.
-Package atveryend Info: Executing hook `AtEndAfterFileList' on input line 425.
+[12 </Users/afalco/Dropbox/Github/TaskForce19/figure/unnamed-chunk-13-1.pdf>] [
+13] [14]
+Package atveryend Info: Empty hook `BeforeClearDocument' on input line 469.
+Package atveryend Info: Empty hook `AfterLastShipout' on input line 469.
+(/Users/afalco/Dropbox/Github/TaskForce19/SEIR_Review.aux)
+Package atveryend Info: Executing hook `AtVeryEndDocument' on input line 469.
+Package atveryend Info: Executing hook `AtEndAfterFileList' on input line 469.
 Package rerunfilecheck Info: File `SEIR_Review.out' has not changed.
-(rerunfilecheck)             Checksum: B72A5E94D0CCA376C9B80963B574F992;115.
-Package atveryend Info: Empty hook `AtVeryVeryEnd' on input line 425.
+(rerunfilecheck)             Checksum: 95C2633D5A3A204E602D812ECAE22042;173.
+
+LaTeX Warning: There were multiply-defined labels.
+
+Package atveryend Info: Empty hook `AtVeryVeryEnd' on input line 469.
  ) 
 Here is how much of TeX's memory you used:
- 19592 strings out of 492982
- 345099 string characters out of 6132527
- 471409 words of memory out of 5000000
- 22609 multiletter control sequences out of 15000+600000
+ 19620 strings out of 492982
+ 345398 string characters out of 6132527
+ 471864 words of memory out of 5000000
+ 22618 multiletter control sequences out of 15000+600000
  13512 words of font info for 58 fonts, out of 8000000 for 9000
  1141 hyphenation exceptions out of 8191
- 54i,9n,54p,873b,1904s stack positions out of 5000i,500n,10000p,200000b,80000s
+ 54i,9n,54p,872b,1904s stack positions out of 5000i,500n,10000p,200000b,80000s
 </usr/local/texlive/2017/texmf-dist/fonts/type1/public/amsfonts/cm/cmbx12.pfb
-></usr/local/texlive/2017/texmf-dist/fonts/type1/public/amsfonts/cm/cmitt10.pfb
-></usr/local/texlive/2017/texmf-dist/fonts/type1/public/amsfonts/cm/cmmi12.pfb>
-</usr/local/texlive/2017/texmf-dist/fonts/type1/public/amsfonts/cm/cmmi8.pfb></
-usr/local/texlive/2017/texmf-dist/fonts/type1/public/amsfonts/cm/cmr10.pfb></us
-r/local/texlive/2017/texmf-dist/fonts/type1/public/amsfonts/cm/cmr12.pfb></usr/
-local/texlive/2017/texmf-dist/fonts/type1/public/amsfonts/cm/cmr17.pfb></usr/lo
-cal/texlive/2017/texmf-dist/fonts/type1/public/amsfonts/cm/cmr8.pfb></usr/local
-/texlive/2017/texmf-dist/fonts/type1/public/amsfonts/cm/cmsy10.pfb></usr/local/
-texlive/2017/texmf-dist/fonts/type1/public/amsfonts/cm/cmsy8.pfb></usr/local/te
-xlive/2017/texmf-dist/fonts/type1/public/amsfonts/symbols/msbm10.pfb>
-Output written on /Users/afalco/Dropbox/COVID-19/SEIR_Model/SEIR_Review.pdf (12
- pages, 400855 bytes).
+></usr/local/texlive/2017/texmf-dist/fonts/type1/public/amsfonts/cm/cmex10.pfb>
+</usr/local/texlive/2017/texmf-dist/fonts/type1/public/amsfonts/cm/cmitt10.pfb>
+</usr/local/texlive/2017/texmf-dist/fonts/type1/public/amsfonts/cm/cmmi12.pfb><
+/usr/local/texlive/2017/texmf-dist/fonts/type1/public/amsfonts/cm/cmmi6.pfb></u
+sr/local/texlive/2017/texmf-dist/fonts/type1/public/amsfonts/cm/cmmi8.pfb></usr
+/local/texlive/2017/texmf-dist/fonts/type1/public/amsfonts/cm/cmr10.pfb></usr/l
+ocal/texlive/2017/texmf-dist/fonts/type1/public/amsfonts/cm/cmr12.pfb></usr/loc
+al/texlive/2017/texmf-dist/fonts/type1/public/amsfonts/cm/cmr17.pfb></usr/local
+/texlive/2017/texmf-dist/fonts/type1/public/amsfonts/cm/cmr8.pfb></usr/local/te
+xlive/2017/texmf-dist/fonts/type1/public/amsfonts/cm/cmsy10.pfb></usr/local/tex
+live/2017/texmf-dist/fonts/type1/public/amsfonts/cm/cmsy8.pfb></usr/local/texli
+ve/2017/texmf-dist/fonts/type1/public/amsfonts/symbols/msbm10.pfb>
+Output written on /Users/afalco/Dropbox/Github/TaskForce19/SEIR_Review.pdf (14 
+pages, 424335 bytes).
 PDF statistics:
- 386 PDF objects out of 1000 (max. 8388607)
- 350 compressed objects within 4 object streams
- 212 named destinations out of 1000 (max. 500000)
- 48 words of extra memory for PDF output out of 10000 (max. 10000000)
+ 429 PDF objects out of 1000 (max. 8388607)
+ 389 compressed objects within 4 object streams
+ 231 named destinations out of 1000 (max. 500000)
+ 56 words of extra memory for PDF output out of 10000 (max. 10000000)
 

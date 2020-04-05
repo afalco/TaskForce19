@@ -286,9 +286,6 @@ Al ser valores generados aleatoriamente, es posible que no sumen la población d
 
 La suma de las columnas de la matriz anterior será el número número de infectados que habrá en cada una de las regiones.
 
-
-
-
 ### Input
 
 * `HPop` : Población actual.
@@ -298,7 +295,72 @@ La suma de las columnas de la matriz anterior será el número número de infect
 * `prob_move_per_TS` : Probabilidad de movimiento en cada _time step_.
 
 
-### Código comentado
+# El modelo empleado en el código
+
+
+La notación que emplearemos es $1 \le k \le m$ denota el número de nodos en el dividimos la población. El modelo
+supone que en $t=0$ se conocen los valores de la población del nodo $k$ que denotaremos por $N_k.$ El modelo
+describe la evolución de $E_k(\ell\Delta t),$ $I_k(\ell\Delta t)$ y $R_k(\ell\Delta t)$ el número de indivíduos expuestos,
+infectados y recuperados. Los individuos susceptibles se calculan empleando
+$$S_k(\ell \Delta t)=N_k-E_k(\ell \Delta t)-I_k(\ell\Delta t)- R_k(\ell\Delta t)$$
+donde $\Delta t$ es un día y $0\le \ell \le M$ son los días que deseamos simular.
+
+Los datos iniciales son $(E_k(0),I_k(0),R_k(0),N_k)$ para $1 \le k \le m.$ Tambien conocemos los datos de movilidad que se modelan empleando una matriz de Markov
+$$
+P(\ell \Delta t) = (p_{ij}(\ell \Delta t)) \in [0,1]^{m\times m},
+$$  
+donde $p_{ij}(\ell \Delta t)$ representa la probabilidad que un individuo del nodo $i$ se desplaze al nodo $j$
+entre $\ell-1$ y $\ell$ para $1 \le \ell \le M.$ Esta matriz tiene que cumplir que
+$$
+\sum_{j=1}^m p_{ij}(\ell \Delta t) = 1 \text{ para todo } 1 \le i \le m \text{ y } 1 \le \ell \le M.
+$$
+Tenemos entonces que los individuos del nodo $i$ que se desplazan al nodo $j$ es entonces
+$$
+p_{ij}(\ell \Delta t) N_i
+$$
+el movimiento de población entre $\ell-1$ y $\ell$ en un nodo genérico $i$ viene determinado por
+$$
+\sum_{j=1}^m p_{ji}(\ell \Delta t) N_j - \sum_{j=1}^m p_{ij}(\ell \Delta t) N_i.
+$$
+La dinámica del modelo viene determinada por la function `runSim` y en particular por la estructura
+```R
+for (current_day in 1:length(day_list)) {
+    for (current_TS in 1:TSinday) {
+      HPop = recoveryTimeStep(HPop, recrate_values, day_list[current_day])
+      HPop = exposedtoinfTimeStep(HPop, 1 / exposepd)
+      HPop = exposedTimeStep(HPop, exposerate_df, day_list[current_day], exposed_pop_inf_prop)
+      HPop = movementTimeStep(HPop, mobmat, day_list[current_day], control_info, prob_move_per_TS)
+    }
+```
+La primera función repite el procedimiento siguiente para construir la dínamica: Considera  
+$$
+(E_k(0),I_k(0),R_k(0),N_k)
+$$
+y calcula 
+$$
+(E_k(\Delta t),I_k(\Delta t),R_k(\Delta t)
+$$
+del siguiente modo para $\Delta t =$ `current_day = 1`
+$$
+R_k(\Delta t) = R_k(0) + \sum_{i=1}^{I_k(0)} X_i \text{ con } X_i \sim \mathcal{B}(\lambda_1)
+$$
+aquí $X_1,\ldots,X_{I_k(0)}$ es una muestra aleatoria simple de una variable aleatoria 
+Bernouilli de parámetro $\lambda_1 =$ `recrate`.
+$$
+E_k(\Delta t) = E_k(0) - \sum_{i=1}^{E_k(0)}Y_i + \left(
+1 - \frac{E_k(0)+I_k(0)+R_k(0)}{N_k}
+\right) \sum_{i=1}^{I_k(0)+\gamma E_k(0)} Z_i
+$$
+donde $Y_1,\ldots,Y_{E_k(0)}$ es una muestra aleatoria simple de una variable aleatoria 
+Bernouilli de parámetro $\lambda_2 =$ `exp_to_infrate`
+$Z_1,\ldots,Z_{I_k(0)+\gamma E_k(0)}$ siendo $\gamma =$ `exposed_pop_inf_prop` es una muestra aleatoria simple de una variable aleatoria Poisson de parámetro $\lambda_3 =$ `exposerate`. Finalmente,
+$$
+I_k(\Delta t) = I_k(0) + \sum_{i=1}^{E_k(0)}Y_i -  \sum_{i=1}^{I_k(0)} X_i + \sum_{j=1}^m p_{jk}(\Delta t) N_j - \sum_{j=1}^m p_{kj}(\Delta t) N_k.
+$$
+Almacenamos $(E_k(\Delta t),I_k(\Delta t),R_k(\Delta t))$ y tomamos $(E_k(0),I_k(0),R_k(0)) \leftarrow (E_k(\Delta t),I_k(\Delta t),R_k(\Delta t))$ y repetimos el proceso anterior almacenando el resultado en
+$(E_k(2\Delta t),I_k(2\Delta t),R_k(2\Delta t))$ y así seguimos hasta conseguir
+$(E_k(M\Delta t),I_k(M\Delta t),R_k(M\Delta t)).$
+
 
 # Bearmod Code
 
@@ -535,8 +597,11 @@ exposedTimeStep = function(HPop, exposerate_df, current_day, exposed_pop_inf_pro
   }
   for (i in 1:length(HPop$nInf)){
     infectious_pop = HPop$nInf[i] + exposed_pop_inf_prop * HPop$nExp[i]
-    #HPop$nExposedToday[i]= sum(rbinom(infectious_pop,1,exposerate)) * (1 - ( (HPop$nInf[i] + HPop$nExp[i]) / HPop$nTotal[i]))
-    HPop$nExposedToday[i]= sum(rpois(infectious_pop,exposerate)) * (1 - ( (HPop$nInf[i] + HPop$nExp[i] + HPop$nRec[i]) / HPop$nTotal[i]))
+    #HPop$nExposedToday[i]= sum(rbinom(infectious_pop,1,exposerate)) 
+    # * (1 - ( (HPop$nInf[i] + HPop$nExp[i]) / HPop$nTotal[i]))
+    RandomS = sum(rpois(infectious_pop,exposerate))
+    Exposed_fraction = 1-(HPop$nInf[i] + HPop$nExp[i] + HPop$nRec[i]) / HPop$nTotal[i]
+    HPop$nExposedToday[i]= RandomS * Exposed_fraction
     if (HPop$nExp[i] + HPop$nExposedToday[i] < HPop$nTotal[i] - HPop$nInf[i] - HPop$nRec[i] ) {
       HPop$nExp[i] = HPop$nExp[i] + HPop$nExposedToday[i]
       
@@ -546,11 +611,12 @@ exposedTimeStep = function(HPop, exposerate_df, current_day, exposed_pop_inf_pro
       HPop$nExp[i]  = max(0,HPop$nTotal[i] - HPop$nInf[i] - HPop$nRec[i])
     }
   }
-  print(paste0("Number of people newly exposed: ",sum(HPop$nExposedToday)))
+  #print(paste0("Number of people newly exposed: ",sum(HPop$nExposedToday)))
   HPop
 }
-
+###############################################
 ####### Activity functions: Human movement ####
+###############################################
 movementTimeStep = function(HPop, mobmat,day,control_df,prob_move_per_TS){
   # Crea una matrix de nPatches x nPatches
   movement_matrix = matrix(0,NPat,NPat,dimnames=list(patIDs,patIDs))
@@ -612,12 +678,18 @@ movementTimeStep = function(HPop, mobmat,day,control_df,prob_move_per_TS){
   # stochastic version
 
   # Para cada entrada (i,j) de la matriz de movilidad:
-  #     - movement_matrix(i,j) representa la probabilidad p de que un invididuo de la region i se mueve a j
-  #     - Se toma el número de infectados de la region i como numero de ensayos de la distribucion binomial
-  #     - Se genera un valor aleatorio a partir de dicha distribucion para cada entrada, que representa los infectados que se han movido de i a j (incluyendo los que se quedan en la misma región)
+  #     - movement_matrix(i,j) representa la probabilidad p de que un invididuo 
+  #       de la region i se mueve a j
+  #     - Se toma el número de infectados de la region i como numero de ensayos 
+  #       de la distribucion binomial
+  #     - Se genera un valor aleatorio a partir de dicha distribucion para cada 
+  #       entrada, que representa los infectados que se han movido de i a j 
+  #       (incluyendo los que se quedan en la misma región)
     z <- rbinom(n=NPat^2,size = rep(HPop$nInf,each=NPat),prob = t(movement_matrix)[])
   moved_matrix = t(matrix(z,NPat,NPat,dimnames=list(patIDs,patIDs)))
-  # Se normaliza cada fila de la matriz de movimientos y se multiplican por el número de infectados en i para asegurarnos que la suma de cada fila sea igual al número de infectados en cada región
+  # Se normaliza cada fila de la matriz de movimientos y se multiplican por el 
+  # número de infectados en i para asegurarnos que la suma de cada fila sea igual 
+  # al número de infectados en cada región
   for (i in 1:dim(moved_matrix)[1]){
      if (sum(moved_matrix[i,]) > 0){
      moved_matrix[i,] = moved_matrix[i,]/sum(moved_matrix[i,]) * HPop$nInf[i]
@@ -626,11 +698,13 @@ movementTimeStep = function(HPop, mobmat,day,control_df,prob_move_per_TS){
   # Se suman las columnas de la matrix (nuevo número de infectados en cada region j)
   HPop$nInfMovedToday = ceiling(colSums(moved_matrix))
   
-  # A la población infectada de cada patch, se le restan los que salen y se suman los que entran
+  # A la población infectada de cada patch, se le restan los que salen y 
+  # se suman los que entran
   HPop$nInf = HPop$nInf - floor(rowSums(moved_matrix)) + ceiling(colSums(moved_matrix))
   #quick fix
 
-  # Evita que el numero de infectados de una region pueda ser superior al numero total de habitantes
+  # Evita que el numero de infectados de una region pueda ser superior al numero 
+  # total de habitantes
   for (i in 1:length(HPop$nInf)){
     if (HPop$nInf[i] > HPop$nTotal[i]){
       HPop$nInf[i] = HPop$nTotal[i]
@@ -640,9 +714,10 @@ movementTimeStep = function(HPop, mobmat,day,control_df,prob_move_per_TS){
   HPop
 }
 
-
-###### Response functions: Control
-#relative_movement is the proportion of original movement out/in that we want to keep -- ie. .1 = 10% of original movement rate
+###### Response functions: Control #####################
+#relative_movement is the proportion of original movement out/in 
+#that we want to keep -- ie. .1 = 10% of original movement rate
+#######################################################
 stopMovement = function(HPop,mobmat,current_date){
   stopping = which(HPop$controlled > 0)
     if (length(stopping) > 0){
@@ -661,12 +736,14 @@ stopMovement = function(HPop,mobmat,current_date){
     mobmat
 }
 ########################################
-# Revisado has aquí 1 de Abril 2020
 ###### Master function  ################
-runSim = function(HPop,pat_info,control_info,mobmat,day_list,recrate_values,exposerate_df,exposepd,exposed_pop_inf_prop = 0,TSinday = 1,prob_move_per_TS=0) {
+########################################
+###### Master function  ####
+runSim = function(HPop,pat_info,control_info,mobmat,day_list,recrate_values,exposerate_df
+  ,exposepd,exposed_pop_inf_prop = 0,TSinday = 1,prob_move_per_TS=0) {
   epidemic_curve <- data.frame(Date=as.Date(character()),
                                inf=c(),
-                               stringsAsFactors=FALSE)  
+                               stringsAsFactors=FALSE) 
   if (TSinday > 1){
     #recrate_values$recrate = 1-(1-recrate_values$recrate)^(1/TSinday)
     exposetoinfrate = 1/exposepd
@@ -683,30 +760,32 @@ runSim = function(HPop,pat_info,control_info,mobmat,day_list,recrate_values,expo
       exposerate_df$exposerate = 1 - exp(log(1-exposerate_df$exposerate) / TSinday)
     }
   }
-  all_spread = matrix(0,length(day_list),length(HPop$nInf))
-  colnames(all_spread) = HPop$names
+  all_spread <- matrix(0, length(day_list), 4 * length(HPop$nInf))
+  colnames(all_spread) = c(paste0('inf_', HPop$names), paste0('rec_', HPop$names), 
+                           paste0('exp_', HPop$names), paste0('sus_', HPop$names))
   #print(all_dates)
-  for (current_day in 1:length(day_list)){
-    for (current_TS in 1:TSinday){
-    #print("Day: ")
-	  #print(day_list[current_day])
-    HPop = recoveryTimeStep(HPop,recrate_values,day_list[current_day])
-    HPop = exposedtoinfTimeStep(HPop,1/exposepd)
-    HPop = exposedTimeStep(HPop,exposerate_df, day_list[current_day], exposed_pop_inf_prop)
-    
-    HPop = movementTimeStep(HPop,mobmat,day_list[current_day],control_info,prob_move_per_TS)
+  for (current_day in 1:length(day_list)) {
+    for (current_TS in 1:TSinday) {
+      # print("Day: ")
+      # print(day_list[current_day])
+      HPop = recoveryTimeStep(HPop, recrate_values, day_list[current_day])
+      HPop = exposedtoinfTimeStep(HPop, 1 / exposepd)
+      HPop = exposedTimeStep(HPop, exposerate_df, day_list[current_day], exposed_pop_inf_prop)
+      HPop = movementTimeStep(HPop, mobmat, day_list[current_day], control_info, prob_move_per_TS)
     }
     #save(HPop,file=paste(current_day,".RData"))
     epidemic_curve = rbind(epidemic_curve,data.frame(Date = day_list[current_day], inf = sum(HPop$nInf)))
-    all_spread[current_day,] = HPop$nInf
-    
+    all_spread[current_day, 1:3] <- HPop$nInf
+    all_spread[current_day, 4:6] <- HPop$nRec
+    all_spread[current_day, 7:9] <- HPop$nExp
+    all_spread[current_day, 10:12] <- HPop$nTotal - HPop$nInf - HPop$nRec - HPop$nExp
   }
   all_spread_2 = data.frame(dates = day_list,runday = 1:length(day_list))
-  all_spread_2= cbind(all_spread_2,all_spread)
+  all_spread_2 = cbind(all_spread_2,all_spread)
   list(HPop = HPop,epidemic_curve = epidemic_curve,all_spread=all_spread_2)
 }
 
-################################################################################################
+##########################################
 # Second Approach
 ##########################################
 exposedTimeStep_timespent = function(HPop, exposerate_df, current_day, exposed_pop_inf_prop,ts_data){

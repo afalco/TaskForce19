@@ -381,5 +381,49 @@ plot(x=out$time, y=N*out$R, col="green",type="l"
   ,main="Population no longer infectious \n due to isolation or immunity") 
 @
 
+\section{A stochastic SEIR Model}
+
+Let us start by considering the following SEIR Model
+\begin{align}
+\dot{S} & = - \widehat{\beta} S \,I, \label{bPSEIR1}\\
+\dot{E} & = \widehat{\beta} S \,I - \sigma E, \label{bPSEIR2} \\
+\dot{I} & = \sigma E - \gamma I, \label{bPSEIR3}\\
+\dot{R} & = \gamma I  \label{bPSEIR4}
+\end{align}
+where $S+E+I+R = N,$  $\dot{S}+\dot{I}+\dot{I}+\dot{R} =0,$ and $\widehat{\beta} = \beta/N.$ Then
+the Euler discretization with temporal step $\Delta t$ gives us
+\begin{align}
+S_{t+\Delta t}-S_t & =  - \widehat{\beta} S_t \,I_t \, \Delta t, \label{cPSEIR1}\\
+E_{t+\Delta t}-E_t & = (\widehat{\beta} S_t \,I_t - \sigma E_t)\, \Delta t, \label{cPSEIR2} \\
+I_{t+\Delta t}-I_t & =  (\sigma E_t - \gamma I_t)\, \Delta t, \label{cPSEIR3} \\ 
+R_{t+\Delta t}-R_t & = \gamma I_t \, \Delta t \label{cPSEIR4}
+\end{align}
+We will assume that $\Delta t = 1$ day and then we finally obtain the following discrete dynamical system,
+\begin{align}
+S_{t+\Delta t}-S_t & =  - \widehat{\beta} S_t \,I_t , \label{cPSEIR1}\\
+E_{t+\Delta t}-E_t & = \widehat{\beta} S_t \,I_t - \sigma E_t, \label{cPSEIR2} \\
+I_{t+\Delta t}-I_t & =  \sigma E_t - \gamma I_t, \label{cPSEIR3} \\ 
+R_{t+\Delta t}-R_t & = \gamma I_t. \label{cPSEIR4}
+\end{align}
+To introduce the randomness in this model we will consider that
+$$\{(S_t,E_t,I_t,R_t) : t \in \{0,1,\ldots,T\}\}$$ is an $\mathcal{F}$-adapted stochastic process on a probability
+space $(\Omega,\mathcal{F},\mathbb{P})$ where the filtration $\mathcal{F}=(\mathcal{F}_t)_{t=0}^T$ and hence 
+$(S_t,E_t,I_t,R_t)$ is a $\mathcal{F}_t$-measurable random variable. Thus,
+\begin{align}
+\mathbb{E}[S_{t+\Delta t}|\mathcal{F}_t] & =  S_t - \widehat{\beta} S_t \,I_t , \label{cPSEIR1}\\
+\mathbb{E}[E_{t+\Delta t}|\mathcal{F}_t] & = E_t + \widehat{\beta} S_t \,I_t - \sigma E_t, \label{cPSEIR2} \\
+\mathbb{E}[I_{t+\Delta t}|\mathcal{F}_t] & = I_t + \sigma E_t - \gamma I_t, \label{cPSEIR3} \\ 
+\mathbb{E}[R_{t+\Delta t} |\mathcal{F}_t] & =R_t + \gamma I_t. \label{cPSEIR4}
+\end{align}
+Under the assumption $E_t \in \mathbb{N}$ we can consider a sequence $X_1,\ldots,X_{E_t}$ of independent random variables from $X \sim \mathcal{B}(\sigma),$ then we can write
+$$
+\sigma \, E_t = \mathbb{E}\left[\left. \sum_{k=1}^{E_t} X_{k} \right| \mathcal{F}_t  \right]
+=  \mathbb{E}\left[\sum_{k=1}^{E_t} X_{k} \right],
+$$
+and also if $I_t \in \mathbb{N}$ we can consider a sequence $Y_1,\ldots,Y_{I_t}$ of independent random variables from $Y \sim \mathcal{B}(\gamma),$ then we can write
+$$
+\gamma \, I_t = \mathbb{E}\left[\left. \sum_{k=1}^{I_t} Y_{k} \right| \mathcal{F}_t  \right]
+=  \mathbb{E}\left[\sum_{k=1}^{Y_t} Y_{k} \right].
+$$
 
 \end{document}
