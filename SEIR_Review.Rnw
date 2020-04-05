@@ -385,35 +385,35 @@ plot(x=out$time, y=N*out$R, col="green",type="l"
 
 Let us start by considering the following SEIR Model
 \begin{align}
-\dot{S} & = - \widehat{\beta} S \,I, \label{bPSEIR1}\\
-\dot{E} & = \widehat{\beta} S \,I - \sigma E, \label{bPSEIR2} \\
+\dot{S} & = - \beta S \,I, \label{bPSEIR1}\\
+\dot{E} & = \beta S \,I - \sigma E, \label{bPSEIR2} \\
 \dot{I} & = \sigma E - \gamma I, \label{bPSEIR3}\\
 \dot{R} & = \gamma I  \label{bPSEIR4}
 \end{align}
-where $S+E+I+R = N,$  $\dot{S}+\dot{I}+\dot{I}+\dot{R} =0,$ and $\widehat{\beta} = \beta/N.$ Then
+where $S+E+I+R = N$ and $\dot{S}+\dot{I}+\dot{I}+\dot{R} =0,$ Then
 the Euler discretization with temporal step $\Delta t$ gives us
 \begin{align}
-S_{t+\Delta t}-S_t & =  - \widehat{\beta} S_t \,I_t \, \Delta t, \label{cPSEIR1}\\
-E_{t+\Delta t}-E_t & = (\widehat{\beta} S_t \,I_t - \sigma E_t)\, \Delta t, \label{cPSEIR2} \\
-I_{t+\Delta t}-I_t & =  (\sigma E_t - \gamma I_t)\, \Delta t, \label{cPSEIR3} \\ 
-R_{t+\Delta t}-R_t & = \gamma I_t \, \Delta t \label{cPSEIR4}
+S_{t+\Delta t}-S_t & =  - \beta S_t \,I_t \, \Delta t, \label{ccPSEIR1}\\
+E_{t+\Delta t}-E_t & = (\beta S_t \,I_t - \sigma E_t)\, \Delta t, \label{ccPSEIR2} \\
+I_{t+\Delta t}-I_t & =  (\sigma E_t - \gamma I_t)\, \Delta t, \label{ccPSEIR3} \\ 
+R_{t+\Delta t}-R_t & = \gamma I_t \, \Delta t \label{ccPSEIR4}
 \end{align}
 We will assume that $\Delta t = 1$ day and then we finally obtain the following discrete dynamical system,
 \begin{align}
-S_{t+\Delta t}-S_t & =  - \widehat{\beta} S_t \,I_t , \label{cPSEIR1}\\
-E_{t+\Delta t}-E_t & = \widehat{\beta} S_t \,I_t - \sigma E_t, \label{cPSEIR2} \\
-I_{t+\Delta t}-I_t & =  \sigma E_t - \gamma I_t, \label{cPSEIR3} \\ 
-R_{t+\Delta t}-R_t & = \gamma I_t. \label{cPSEIR4}
+S_{t+1}-S_t & =  - \beta S_t \,I_t , \label{cPSEIR1}\\
+E_{t+1}-E_t & = \beta S_t \,I_t - \sigma E_t, \label{cPSEIR2} \\
+I_{t+1}-I_t & =  \sigma E_t - \gamma I_t, \label{cPSEIR3} \\ 
+R_{t+1}-R_t & = \gamma I_t. \label{cPSEIR4}
 \end{align}
 To introduce the randomness in this model we will consider that
 $$\{(S_t,E_t,I_t,R_t) : t \in \{0,1,\ldots,T\}\}$$ is an $\mathcal{F}$-adapted stochastic process on a probability
 space $(\Omega,\mathcal{F},\mathbb{P})$ where the filtration $\mathcal{F}=(\mathcal{F}_t)_{t=0}^T$ and hence 
 $(S_t,E_t,I_t,R_t)$ is a $\mathcal{F}_t$-measurable random variable. Thus,
 \begin{align}
-\mathbb{E}[S_{t+\Delta t}|\mathcal{F}_t] & =  S_t - \widehat{\beta} S_t \,I_t , \label{cPSEIR1}\\
-\mathbb{E}[E_{t+\Delta t}|\mathcal{F}_t] & = E_t + \widehat{\beta} S_t \,I_t - \sigma E_t, \label{cPSEIR2} \\
-\mathbb{E}[I_{t+\Delta t}|\mathcal{F}_t] & = I_t + \sigma E_t - \gamma I_t, \label{cPSEIR3} \\ 
-\mathbb{E}[R_{t+\Delta t} |\mathcal{F}_t] & =R_t + \gamma I_t. \label{cPSEIR4}
+\mathbb{E}[S_{t+1}|\mathcal{F}_t] & =  S_t - \beta S_t \,I_t , \label{dPSEIR1}\\
+\mathbb{E}[E_{t+1}|\mathcal{F}_t] & = E_t + \beta S_t \,I_t - \sigma E_t, \label{dPSEIR2} \\
+\mathbb{E}[I_{t+1}|\mathcal{F}_t] & = I_t + \sigma E_t - \gamma I_t, \label{dPSEIR3} \\ 
+\mathbb{E}[R_{t+1} |\mathcal{F}_t] & =R_t + \gamma I_t. \label{dPSEIR4}
 \end{align}
 Under the assumption $E_t \in \mathbb{N}$ we can consider a sequence $X_1,\ldots,X_{E_t}$ of independent random variables from $X \sim \mathcal{B}(\sigma),$ then we can write
 $$
@@ -423,7 +423,52 @@ $$
 and also if $I_t \in \mathbb{N}$ we can consider a sequence $Y_1,\ldots,Y_{I_t}$ of independent random variables from $Y \sim \mathcal{B}(\gamma),$ then we can write
 $$
 \gamma \, I_t = \mathbb{E}\left[\left. \sum_{k=1}^{I_t} Y_{k} \right| \mathcal{F}_t  \right]
-=  \mathbb{E}\left[\sum_{k=1}^{Y_t} Y_{k} \right].
+=  \mathbb{E}\left[\sum_{k=1}^{I_t} Y_{k} \right].
 $$
+This allow us to propose the following equations 
+\begin{align*}
+I_{t+1}-I_t & =  \sum_{k=1}^{E_t} X_{k} -  \sum_{k=1}^{I_t} Y_{k},  \\ 
+R_{t+1}-R_t & =  \sum_{k=1}^{I_t} Y_{k}. 
+\end{align*}
+From \eqref{cPSEIR1}, we may assume that
+\begin{equation}\label{exposed}
+\frac{S_{t+1}-S_t}{S_t} =  - \beta \,I_t = -\frac{\beta}{\gamma} \, (\gamma I_t)  
+= -\frac{\beta}{\gamma} \, \sum_{k=1}^{I_t} Y_k.
+\end{equation}
+Then, by using \eqref{cPSEIR3} together \eqref{cPSEIR1}, we
+have
+\begin{align*}
+E_{t+1} & = E_t + \beta S_t \,I_t - \sigma E_t = E_t - (S_{t+1}-S_t) - \sum_{k=1}^{E_t} X_{k} \\
+& = E_t + S_t \, \frac{\beta}{\gamma} \, \sum_{k=1}^{I_t} Y_k - \sum_{k=1}^{E_t} X_{k} \text{ by using \eqref{exposed}, } \\
+& =  E_t + (N-E_t-I_t-R_t) \frac{\beta}{\gamma} \, \sum_{k=1}^{I_t} Y_k - \sum_{k=1}^{E_t} X_{k} \\
+& =  E_t + \left(1-\frac{E_t+I_t+R_t}{N}\right)\, N \, \frac{\beta}{\gamma} \, \sum_{k=1}^{I_t} Y_k - \sum_{k=1}^{E_t} X_{k}.
+\end{align*}
 
+Observe that,
+$$
+\mathbb{E}\left[\left.N \, \frac{\beta}{\gamma} \, \sum_{k=1}^{I_t} Y_k  \right| \mathcal{F}_t \right] 
+= N \, \beta I_t = N \, \mathbb{E}\left[\left.\, \sum_{k=1}^{I_t} \widehat{Y}_k  \right| \mathcal{F}_t \right]
+$$
+where $\widehat{Y}_1,\ldots,\widehat{Y}_{I_t}$ is a sequence of independent random variables 
+from $\widehat{Y} \sim \mathcal{B}( \beta).$ Since $\beta << N$ it allows us to consider
+$$
+Z_t = N \, \beta \, I_t = N \, \frac{\beta}{\gamma} \, \sum_{k=1}^{I_t} Y_k 
+$$
+where $Z \sim \mathcal{P}(\beta)$ and $Z_1,\ldots,Z_T$ are independent random variables. Thus we can finally give the Stochastic SEIR Model
+\begin{align}
+E_{t+1} & = E_t - \sum_{k=1}^{E_t} X_{k} + \left( 1- \frac{E_t+I_t+R_t}{N} \right)Z_t, \\
+I_{t+1} & = I_t + \sum_{k=1}^{E_t} X_{k}  - \sum_{k=1}^{I_t} Y_{k}, \\
+R_{t+1} & = R_t + \sum_{k=1}^{I_t} Y_{k}
+\end{align}
+where 
+$$
+S_{t} = N-(E_t+I_t+R_t) \text{ for all time }t,
+$$
+and
+\begin{align*}
+X_1,\ldots,X_{E_t} & \text{ is a sample from a } \mathcal{B}(\sigma), \\
+Y_1,\ldots,Y_{I_t} & \text{ is a sample from a } \mathcal{B}(\gamma), \\
+Z_1,\ldots,Z_T & \text{ is a sample from a } \mathcal{P}(\beta).
+\end{align*}
+Here $\mathcal{B}(p)$ denotes a Bernoulli distribution and $\mathcal{P}(\lambda)$ a Poisson distribution.
 \end{document}

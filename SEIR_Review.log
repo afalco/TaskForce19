@@ -1,4 +1,4 @@
-This is pdfTeX, Version 3.14159265-2.6-1.40.18 (TeX Live 2017) (preloaded format=pdflatex 2018.2.17)  5 APR 2020 10:32
+This is pdfTeX, Version 3.14159265-2.6-1.40.18 (TeX Live 2017) (preloaded format=pdflatex 2018.2.17)  5 APR 2020 11:56
 entering extended mode
  restricted \write18 enabled.
  %&-line parsing enabled.
@@ -877,32 +877,7 @@ LaTeX Font Info:    Overwriting math alphabet `\mathfrak' in version `bold'
 \c@proposition=\count152
 \c@question=\count153
 \c@remark=\count154
-(/Users/afalco/Dropbox/Github/TaskForce19/SEIR_Review.aux
-
-LaTeX Warning: Label `cPSEIR1' multiply defined.
-
-
-LaTeX Warning: Label `cPSEIR2' multiply defined.
-
-
-LaTeX Warning: Label `cPSEIR3' multiply defined.
-
-
-LaTeX Warning: Label `cPSEIR4' multiply defined.
-
-
-LaTeX Warning: Label `cPSEIR1' multiply defined.
-
-
-LaTeX Warning: Label `cPSEIR2' multiply defined.
-
-
-LaTeX Warning: Label `cPSEIR3' multiply defined.
-
-
-LaTeX Warning: Label `cPSEIR4' multiply defined.
-
-)
+(/Users/afalco/Dropbox/Github/TaskForce19/SEIR_Review.aux)
 \openout1 = `SEIR_Review.aux'.
 
 LaTeX Font Info:    Checking defaults for OML/cmm/m/it on input line 53.
@@ -1072,27 +1047,24 @@ Underfull \hbox (badness 10000) in paragraph at lines 422--423
  []
 
 [12 </Users/afalco/Dropbox/Github/TaskForce19/figure/unnamed-chunk-13-1.pdf>] [
-13] [14]
-Package atveryend Info: Empty hook `BeforeClearDocument' on input line 469.
-Package atveryend Info: Empty hook `AfterLastShipout' on input line 469.
+13] [14] [15]
+Package atveryend Info: Empty hook `BeforeClearDocument' on input line 514.
+Package atveryend Info: Empty hook `AfterLastShipout' on input line 514.
 (/Users/afalco/Dropbox/Github/TaskForce19/SEIR_Review.aux)
-Package atveryend Info: Executing hook `AtVeryEndDocument' on input line 469.
-Package atveryend Info: Executing hook `AtEndAfterFileList' on input line 469.
+Package atveryend Info: Executing hook `AtVeryEndDocument' on input line 514.
+Package atveryend Info: Executing hook `AtEndAfterFileList' on input line 514.
 Package rerunfilecheck Info: File `SEIR_Review.out' has not changed.
 (rerunfilecheck)             Checksum: 95C2633D5A3A204E602D812ECAE22042;173.
-
-LaTeX Warning: There were multiply-defined labels.
-
-Package atveryend Info: Empty hook `AtVeryVeryEnd' on input line 469.
+Package atveryend Info: Empty hook `AtVeryVeryEnd' on input line 514.
  ) 
 Here is how much of TeX's memory you used:
- 19620 strings out of 492982
- 345398 string characters out of 6132527
- 471864 words of memory out of 5000000
- 22618 multiletter control sequences out of 15000+600000
+ 19634 strings out of 492982
+ 345542 string characters out of 6132527
+ 472293 words of memory out of 5000000
+ 22627 multiletter control sequences out of 15000+600000
  13512 words of font info for 58 fonts, out of 8000000 for 9000
  1141 hyphenation exceptions out of 8191
- 54i,9n,54p,872b,1904s stack positions out of 5000i,500n,10000p,200000b,80000s
+ 54i,11n,54p,872b,1904s stack positions out of 5000i,500n,10000p,200000b,80000s
 </usr/local/texlive/2017/texmf-dist/fonts/type1/public/amsfonts/cm/cmbx12.pfb
 ></usr/local/texlive/2017/texmf-dist/fonts/type1/public/amsfonts/cm/cmex10.pfb>
 </usr/local/texlive/2017/texmf-dist/fonts/type1/public/amsfonts/cm/cmitt10.pfb>
@@ -1106,11 +1078,11 @@ al/texlive/2017/texmf-dist/fonts/type1/public/amsfonts/cm/cmr17.pfb></usr/local
 xlive/2017/texmf-dist/fonts/type1/public/amsfonts/cm/cmsy10.pfb></usr/local/tex
 live/2017/texmf-dist/fonts/type1/public/amsfonts/cm/cmsy8.pfb></usr/local/texli
 ve/2017/texmf-dist/fonts/type1/public/amsfonts/symbols/msbm10.pfb>
-Output written on /Users/afalco/Dropbox/Github/TaskForce19/SEIR_Review.pdf (14 
-pages, 424335 bytes).
+Output written on /Users/afalco/Dropbox/Github/TaskForce19/SEIR_Review.pdf (15 
+pages, 428340 bytes).
 PDF statistics:
- 429 PDF objects out of 1000 (max. 8388607)
- 389 compressed objects within 4 object streams
- 231 named destinations out of 1000 (max. 500000)
+ 450 PDF objects out of 1000 (max. 8388607)
+ 401 compressed objects within 5 object streams
+ 236 named destinations out of 1000 (max. 500000)
  56 words of extra memory for PDF output out of 10000 (max. 10000000)
 
