@@ -20,7 +20,7 @@ getIndices = function(patNames) {
 #' @param num_runs
 #' @return 
 #' 
-runModel = function(pat_locator, movement_data, input_dates, params, num_runs = 10) {
+runModel = function(pat_locator, movement_data, input_dates, params, num_runs = 10, show_reported=FALSE) {
   
   ## Lee los parametros
   exposepd <- params$exposepd;
@@ -85,8 +85,12 @@ runModel = function(pat_locator, movement_data, input_dates, params, num_runs = 
   }
 
   ## Obtiene la media de todas las curvas y corrige con el factor de reportados
-  epidemic_curve[, curve_indices] = epidemic_curve[, curve_indices] * prop_reported$prop /num_runs
-  all_spread[, all_spread_indices] = all_spread[, all_spread_indices]  * prop_reported$prop / num_runs
+  epidemic_curve[, curve_indices] = epidemic_curve[, curve_indices] /num_runs
+  all_spread[, all_spread_indices] = all_spread[, all_spread_indices] / num_runs
+  if(show_reported) {
+    epidemic_curve[, curve_indices] = epidemic_curve[, curve_indices] * prop_reported$prop
+    all_spread[, all_spread_indices] = all_spread[, all_spread_indices]  * prop_reported$prop
+  }
   
   #save(results,file="results_ComVal_Mobility.RData")
   #   
@@ -115,13 +119,13 @@ fillDates = function(input_dates, table) {
   # Si se dan fecha absolutas, se transforman a dias de desplazamiento respecto a la fecha inicial
   if(is.Date(table$date)) {
     offset = table$date - input_dates[1] + 1
-    table$date = offset
+    table$date = as.numeric(offset)
   }
   
   # Como patron inicial toma la ultima fecha anterior a la primera fecha de input_dates, o la primera fecha
   # de la tabla si no hubiese ninguna anterior
   first_date = min(table$date)
-  previous_rows = subset(milestones, date<=1)
+  previous_rows = subset(table, date<=1)
   if(nrow(previous_rows) > 0) {
     first_date = max(previous_rows$date)
   }
@@ -151,8 +155,11 @@ plotAllPatches = function(table, patNames, col="inf", milestones=NULL, real_data
   par(mfrow=c(1, 1))
   
   columns = paste0(col, "_", patNames)
-  total = rowSums(table[, columns])
 
+  total =  table[, columns]
+  if(length(columns) > 1) {
+    total = rowSums(table[, columns])
+  }
   plot(table$dates, total, type="l", col="black", ylim=c(0,max(total)), xlab = "date", ylab = col)
 
   if(!is.null(milestones)) {
@@ -162,7 +169,6 @@ plotAllPatches = function(table, patNames, col="inf", milestones=NULL, real_data
   }
 
   if(!is.null(real_data)) {
-    print(real_data)
     lines(as.Date(real_data$dates), real_data$inf, type="l", col="black", lty=2)
   }
   

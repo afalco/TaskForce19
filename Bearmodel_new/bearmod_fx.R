@@ -308,10 +308,7 @@ runSim = function(HPop,pat_info,control_info,mobmat,day_list,recrate_values,expo
     }
     #save(HPop,file=paste(current_day,".RData"))
     epidemic_curve = rbind(epidemic_curve,data.frame(Date = day_list[current_day], inf = sum(HPop$nInf)))
-    all_spread[current_day, 1:3] <- HPop$nInf
-    all_spread[current_day, 4:6] <- HPop$nRec
-    all_spread[current_day, 7:9] <- HPop$nExp
-    all_spread[current_day, 10:12] <- HPop$nTotal - HPop$nInf - HPop$nRec - HPop$nExp
+    all_spread[current_day,] <- c(HPop$nInf,HPop$nRec,HPop$nExp,HPop$nTotal - HPop$nInf - HPop$nRec - HPop$nExp)
   }
   all_spread_2 = data.frame(dates = day_list,runday = 1:length(day_list))
   all_spread_2 = cbind(all_spread_2,all_spread)
