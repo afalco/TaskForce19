@@ -18,9 +18,26 @@ getIndices = function(patNames) {
 #' @param input_dates
 #' @param params
 #' @param num_runs
-#' @return 
+#' @return Devuelve una lista con dos objetos: 
+#'     \itemize{
+#'         \item `epidemic_curve`. Incluye una columna \code{inf} con el total de infectados por fecha. 
+#'         \item `all_spread`. Para cada \em{patch}, se incluyen las siguientes columnas:
+#'             \itemize{
+#'                 \item \code{inf_<patch_name>} Infectados activos
+#'                 \item \code{rec_<patch_name>} Recuperados hasta la fecha  
+#'                 \item \code{exp_<patch_name>} Expuestos activos
+#'                 \item \code{sus_<patch_name>} Susceptibles
+#'                 \item \code{inf_day_<patch_name>} Nuevos infectados en cada fecha
+#'                 \item \code{rec_day_<patch_name>} Nuevos recuperados en cada fecha
+#'                 \item \code{rep_day_<patch_name>} Nuevos reportados en cada fecha
+#'                 \item \code{rec_total_<patch_name>} Recuperados totales hasta la fecha
+#'                 \item \code{rep_total_<patch_name>} Reportados totales hasta la fecha
+#'                 \item \code{inf_total_<patch_name>} Infectados totales hasta la fecha
+#'             }
+#'     }
 #' 
-runModel = function(pat_locator, movement_data, input_dates, params, num_runs = 10, show_reported=FALSE) {
+#' 
+runModel = function(pat_locator, movement_data, input_dates, params, num_runs = 10) {
   
   ## Lee los parametros
   exposepd <- params$exposepd;
@@ -36,12 +53,16 @@ runModel = function(pat_locator, movement_data, input_dates, params, num_runs = 
   }
   if(is.numeric(recover)) {
     recover <- data.frame(date = input_dates,recrate = recover)
+  } else {
+    recover = fillDates(input_dates, recover)
   }
   
   exposerate <- params$exposerate;
   if (is.null(exposerate)) {
     exposerate <- 2.68/6
     print(paste0("Using default value for expose rate: ", exposerate))
+  } else if(!is.numeric(exposerate)) {
+    exposerate = fillDates(input_dates, exposerate)
   }
 
   prop_reported <- params$prop_reported;
@@ -51,8 +72,16 @@ runModel = function(pat_locator, movement_data, input_dates, params, num_runs = 
   }
   if(is.numeric(prop_reported)) {
     prop_reported <- data.frame(date = input_dates,prop = prop_reported)
+  } else {
+    prop_reported = fillDates(input_dates, prop_reported)
   }
-  
+
+  exposed_pop_inf_prop <- params$exposed_pop_inf_prop
+  if (is.null(exposed_pop_inf_prop)) {
+    exposed_pop_inf_prop <- 0
+    print(paste0("Using default value for exposed population infect prob.: ", exposed_pop_inf_prop))
+  }
+
   ## Inicializa datos de patches a partir de la tabla de movilidad
   patNames <<- pat_locator$patNames  
   patIDs <<- pat_locator$patIDs
@@ -60,14 +89,16 @@ runModel = function(pat_locator, movement_data, input_dates, params, num_runs = 
   
   patnInf <- pat_locator$nInf / prop_reported$prop[1]
   patnExp <- pat_locator$nExp / prop_reported$prop[1]
-  
+  initialRep = pat_locator$nInf
+  initialInf = patnInf
+    
   ## No se especifica reduccion de movilidad
   relative_move_data <- data.frame()
   
   ## Inicializa la población y realiza la primera simulacion
   HPop = InitiatePop(pat_locator,patnInf,patnExp)
-  HPop_update2 = runSim(HPop,pat_locator,relative_move_data,movement_data,input_dates,recover,exposerate,exposepd,exposed_pop_inf_prop = 0, TSinday = 1)
-  print(paste0("Run # ",1))
+  HPop_update2 = runSim(HPop,pat_locator,relative_move_data,movement_data,input_dates,recover,exposerate,exposepd,exposed_pop_inf_prop = exposed_pop_inf_prop, TSinday = 1)
+  #print(paste0("Run # ",1))
   
   epidemic_curve = HPop_update2$epidemic_curve
   all_spread = HPop_update2$all_spread
@@ -77,8 +108,8 @@ runModel = function(pat_locator, movement_data, input_dates, params, num_runs = 
   
   ## Ejecuta N simulaciones
   for (run in 2:num_runs){
-    HPop_update2 = runSim(HPop,pat_locator,relative_move_data,movement_data, input_dates,recover,exposerate,exposepd,exposed_pop_inf_prop = 0, TSinday = 1)
-    print(paste0("Run # ",run))
+    HPop_update2 = runSim(HPop,pat_locator,relative_move_data,movement_data, input_dates,recover,exposerate,exposepd,exposed_pop_inf_prop = exposed_pop_inf_prop, TSinday = 1)
+    #print(paste0("Run # ",run))
     
     epidemic_curve[, curve_indices] = epidemic_curve[, curve_indices] + HPop_update2$epidemic_curve[, curve_indices]
     all_spread[, all_spread_indices] = all_spread[, all_spread_indices] + HPop_update2$all_spread[, all_spread_indices]
@@ -87,9 +118,29 @@ runModel = function(pat_locator, movement_data, input_dates, params, num_runs = 
   ## Obtiene la media de todas las curvas y corrige con el factor de reportados
   epidemic_curve[, curve_indices] = epidemic_curve[, curve_indices] /num_runs
   all_spread[, all_spread_indices] = all_spread[, all_spread_indices] / num_runs
-  if(show_reported) {
-    epidemic_curve[, curve_indices] = epidemic_curve[, curve_indices] * prop_reported$prop
-    all_spread[, all_spread_indices] = all_spread[, all_spread_indices]  * prop_reported$prop
+
+  ## Corrige la proporcion de infectados reportados cada dia
+  current_inf_indices = paste0("inf_", patNames)
+  current_rep_indices = paste0("rep_", patNames)
+  daily_inf_indices = paste0("inf_day_", patNames)
+  daily_rec_indices = paste0("rec_day_", patNames)
+  daily_rep_indices = paste0("rep_day_", patNames)
+  total_rec_indices = paste0("rec_total_", patNames)
+  total_rep_indices = paste0("rep_total_", patNames)
+  total_inf_indices = paste0("inf_total_", patNames)
+  all_spread[, current_rep_indices] = all_spread[, current_inf_indices]* prop_reported$prop
+  all_spread[, daily_rep_indices] = all_spread[, daily_inf_indices]* prop_reported$prop
+  all_spread[, total_rep_indices] = all_spread[, daily_rep_indices]
+  all_spread[, total_inf_indices] = all_spread[, daily_inf_indices]
+  all_spread[, total_rec_indices] = all_spread[, daily_rec_indices]
+
+  all_spread[1, total_inf_indices] = all_spread[1, total_inf_indices] + initialInf
+  all_spread[1, total_rep_indices] = all_spread[1, total_rep_indices] + initialRep
+  
+  for (r in 2:nrow(all_spread)) {
+    all_spread[r, total_rec_indices] = all_spread[r-1, total_rec_indices] + all_spread[r, total_rec_indices]
+    all_spread[r, total_rep_indices] = all_spread[r-1, total_rep_indices] + all_spread[r, total_rep_indices]
+    all_spread[r, total_inf_indices] = all_spread[r-1, total_inf_indices] + all_spread[r, total_inf_indices]
   }
   
   #save(results,file="results_ComVal_Mobility.RData")
@@ -160,8 +211,12 @@ plotAllPatches = function(table, patNames, col="inf", milestones=NULL, real_data
   if(length(columns) > 1) {
     total = rowSums(table[, columns])
   }
-  plot(table$dates, total, type="l", col="black", ylim=c(0,max(total)), xlab = "date", ylab = col)
+  plot(table$dates, total, type="l", col="red", ylim=c(0,max(total)+1000), xlab = "date", ylab = col)
 
+  legend_title = "Model"
+  legend_col = "red"
+  legent_lty = 1
+  
   if(!is.null(milestones)) {
     for(i in 1:nrow(milestones)) {
       abline(v=milestones$date[i], col='blue', lty=1)
@@ -169,15 +224,24 @@ plotAllPatches = function(table, patNames, col="inf", milestones=NULL, real_data
   }
 
   if(!is.null(real_data)) {
-    lines(as.Date(real_data$dates), real_data$inf, type="l", col="black", lty=2)
+    lines(as.Date(real_data$dates), real_data[,col], type="l", col="black", lty=2)
+    
+    legend_title = c(legend_title, "Actual cases")
+    legend_col = c(legend_col, "black")
+    legent_lty = c(legent_lty, 2)
   }
   
-  cl <- rainbow(length(columns))
-  for (i in 1:length(columns)) {
-    lines(table$dates, table[, columns[i]], col=cl[i], type="l")
+  if(length(columns)>1) {
+    cl <- rainbow(length(columns))
+    for (i in 1:length(columns)) {
+      lines(table$dates, table[, columns[i]], col=cl[i], type="l")
+    }
+    legend_title = c(legend_title,as.character(patNames))
+    legend_col = c(legend_col, cl)
+    legent_lty = c(legent_lty, rep(1, length(columns)))
   }
-  legend("topright", col=c("black", cl), legend=c("Total", as.character(patNames)),  lty=1)
   
+  legend("topleft", col=legend_col, legend=legend_title,  lty=legent_lty)
 }
 
 plotCurves = function(table, patNames) {

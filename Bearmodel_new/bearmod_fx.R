@@ -293,9 +293,10 @@ runSim = function(HPop,pat_info,control_info,mobmat,day_list,recrate_values,expo
       exposerate_df$exposerate = 1 - exp(log(1-exposerate_df$exposerate) / TSinday)
     }
   }
-  all_spread <- matrix(0, length(day_list), 4 * length(HPop$nInf))
+  all_spread <- matrix(0, length(day_list), 6 * length(HPop$nInf))
   colnames(all_spread) = c(paste0('inf_', HPop$names), paste0('rec_', HPop$names), 
-                           paste0('exp_', HPop$names), paste0('sus_', HPop$names))
+                           paste0('exp_', HPop$names), paste0('sus_', HPop$names),
+                           paste0('inf_day_', HPop$names), paste0('rec_day_', HPop$names))
   #print(all_dates)
   for (current_day in 1:length(day_list)) {
     for (current_TS in 1:TSinday) {
@@ -308,7 +309,8 @@ runSim = function(HPop,pat_info,control_info,mobmat,day_list,recrate_values,expo
     }
     #save(HPop,file=paste(current_day,".RData"))
     epidemic_curve = rbind(epidemic_curve,data.frame(Date = day_list[current_day], inf = sum(HPop$nInf)))
-    all_spread[current_day,] <- c(HPop$nInf,HPop$nRec,HPop$nExp,HPop$nTotal - HPop$nInf - HPop$nRec - HPop$nExp)
+    all_spread[current_day,] <- c(HPop$nInf,HPop$nRec,HPop$nExp,HPop$nTotal - HPop$nInf - HPop$nRec - HPop$nExp, 
+                                  HPop$nInfectedToday, HPop$nRecoveredToday)
   }
   all_spread_2 = data.frame(dates = day_list,runday = 1:length(day_list))
   all_spread_2 = cbind(all_spread_2,all_spread)
