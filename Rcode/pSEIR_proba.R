@@ -23,7 +23,7 @@ pseirmod = function(t, y, parms) {
   list(res)
 }
 
-times = seq(0, 30, by = 1/10)
+times = seq(0, 300, by = 1/10)
 parms = c(R0 =3,Tinc = 5.2, Tinf=2.9)
 start = c(S = 0.99, E=0.01, I = 0, R = 0)
 
