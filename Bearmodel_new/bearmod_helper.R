@@ -8,7 +8,7 @@ source("bearmod_fx.R")
 #' @return Lista con todos los indices de datos que encontraremos en la tabla all_spread que devuelve la simulacion
 #' 
 getIndices = function(patNames) {
-  paste0(rep(c("inf_", "rec_", "exp_", "sus_"), each=length(patNames)), patNames)
+  paste0(rep(c("inf_", "rec_", "exp_", "sus_", "inf_day_", "rec_day_"), each=length(patNames)), patNames)
 }
 
 #' Ejecuta varias simulaciones del modelo y obtiene las curvas promedio de cada región y totales
@@ -211,11 +211,11 @@ plotAllPatches = function(table, patNames, col="inf", milestones=NULL, real_data
   if(length(columns) > 1) {
     total = rowSums(table[, columns])
   }
-  plot(table$dates, total, type="l", col="red", ylim=c(0,max(total)+1000), xlab = "date", ylab = col)
+  plot(table$dates, total, type="l", col="black", ylim=c(0,max(total)+1000), xlab = "date", ylab = col)
 
-  legend_title = "Model"
-  legend_col = "red"
-  legent_lty = 1
+  legend_title = "Total"
+  legend_col = "black"
+  legend_lty = 1
   
   if(!is.null(milestones)) {
     for(i in 1:nrow(milestones)) {
@@ -228,7 +228,7 @@ plotAllPatches = function(table, patNames, col="inf", milestones=NULL, real_data
     
     legend_title = c(legend_title, "Actual cases")
     legend_col = c(legend_col, "black")
-    legent_lty = c(legent_lty, 2)
+    legend_lty = c(legend_lty, 2)
   }
   
   if(length(columns)>1) {
@@ -238,11 +238,57 @@ plotAllPatches = function(table, patNames, col="inf", milestones=NULL, real_data
     }
     legend_title = c(legend_title,as.character(patNames))
     legend_col = c(legend_col, cl)
-    legent_lty = c(legent_lty, rep(1, length(columns)))
+    legend_lty = c(legend_lty, rep(1, length(columns)))
   }
   
-  legend("topleft", col=legend_col, legend=legend_title,  lty=legent_lty)
+  legend("topleft", col=legend_col, legend=legend_title,  lty=legend_lty)
 }
+
+plotPatch = function(table, patName, cols=c("inf", "rec", "exp"), milestones=NULL, real_data=NULL, real_data_cols="cases") {
+  par(mfrow=c(1, 1))
+  
+  columns = paste0(cols, "_", patName)
+  
+  ymax = max(max(table[,columns]))
+  if(!is.null(real_data)) {
+    ymax = max(ymax, max(real_data[, real_data_cols]))
+  }
+  
+  plot(table$dates, rep(0, length(table$dates)), type="n", ylim=c(0,ymax), xlab = "date", ylab = "count")
+  
+  legend_title = c()
+  legend_col = c()
+  legend_lty = c()
+  
+  if(!is.null(milestones)) {
+    for(i in 1:nrow(milestones)) {
+      abline(v=milestones$date[i], col='blue', lty=1)
+    }
+  }
+
+  rcl <- rainbow(length(real_data_cols))
+  cl <- rainbow(length(cols))
+  
+  if(!is.null(real_data)) {
+    for (i in 1:length(real_data_cols)) {
+      lines(as.Date(real_data$dates), real_data[,real_data_cols[i]], type="l", col=rcl[i], lty=2)
+    }
+    
+    legend_title = c(legend_title, real_data_cols)
+    legend_col = c(legend_col, rcl)
+    legend_lty = c(legend_lty, rep(2, length(real_data_cols)))
+  }
+  
+  for (i in 1:length(columns)) {
+    lines(table$dates, table[, columns[i]], col=cl[i], type="l")
+  }
+  legend_title = c(legend_title,as.character(cols))
+  legend_col = c(legend_col, cl)
+  legend_lty = c(legend_lty, rep(1, length(columns)))
+
+  legend("topleft", col=legend_col, legend=legend_title,  lty=legend_lty)
+}
+
 
 plotCurves = function(table, patNames) {
   

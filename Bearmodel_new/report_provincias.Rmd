@@ -1,0 +1,112 @@
+---
+title: "Estimaciones Comunidad Valenciana"
+author: "COVId19 TaskForce"
+date: "15/4/2020"
+output:
+  pdf_document: default
+  html_document:
+    df_print: paged
+  word_document: default
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+```{r echo=FALSE, results='hide', warning=FALSE, error=FALSE, message=FALSE}
+rm(list=ls())
+library(data.table) # fread - fastly reading data
+library(lubridate)
+library(knitr)
+
+source("bearmod_helper.R")
+
+# Establece fechas de la simulacion
+start_date = ymd("2020-03-10")
+end_date = ymd("2020-05-10")
+input_dates = seq(from=start_date,to=end_date,by="days") 
+
+# Carga tabla de datos reales
+
+real_data = read.table("cv_covid19.csv",sep=",",header=T)
+real_data = real_data[61:nrow(real_data),]
+real_data$inf = real_data$cases - real_data$rec
+real_data$inf_total = real_data$cases
+real_data$rep_total = real_data$cases
+real_data$rep_day = real_data$cases - c(0, real_data$cases[1:(length(real_data$cases)-1)])
+real_data$inf_day = real_data$rep_day
+
+params = list()
+params$exposepd = 5.1 # incubation period (1/exposepd = prob. of exp -> inf transition) ?????????
+params$recrate = 1/7.5 # daily probability of recovery (prob. of inf -> rec transition) gamma [1/14,1/3]
+params$exposed_pop_inf_prop = 1/5  # sigma [1/14,1/3]
+#params$prop_reported = 0.08317  # Infecciosos Reportados/(Infecciosos Reportados + Infecciosos no reportados)
+#params$prop_reported = data.frame(date=input_dates[1], prop=0.03) # Tasa de mortalidad del 0,7%
+#params$prop_reported[2,] = list(date="2020-03-15", prop=0.07)
+params$prop_reported = read.table("cv_detected.csv",sep=",",header=T)
+params$prop_reported$date = as.Date(params$prop_reported$date)
+
+pat_locator_prov = read.table("cv_patches.csv",sep=",",header=T)
+pat_locator_prov$nInf = c(4, 69, 27)
+pat_locator_prov$nExp = c(4, 69, 27) * 1.5
+
+movement_data_zero = data.frame(date=NA, fr_pat=NA, to_pat=NA, fr_users=NA, movers=NA)
+movement_data_prov = read.table("testmove_CV_normal.csv",sep=",",header=T)
+movement_data_prov = fillDates(input_dates, movement_data_prov)
+
+tabla = real_data[,c("dates", "inf", "rep_total")]
+names(tabla) = c("dates", "reportados_activos", "reportados_totales")
+write.csv(tabla, file=paste0("reportados-", today(), ".csv"))
+```
+
+
+
+## Escenario A
+
+En todos los escenarios se parte del supuesto de una tasa de mortalidad del 0,7%, y una estimación de casos reportados del 7% sobre el total de infectados. 
+
+Se mantiene la tasa de reproducción de `r (0.6*params$recrate)`.
+
+```{r echo=FALSE}
+milestones = data.frame()
+milestones = rbind(milestones, data.frame(desc="A. Ninguna acción tomada", date=ymd("2020-02-01"), exposerate=4*params$recrate))
+milestones = rbind(milestones, data.frame(desc="B. Distanciamiento social", date=ymd("2020-03-09"), exposerate=3*params$recrate))
+milestones = rbind(milestones, data.frame(desc="C. Cierre de colegios", date=ymd("2020-03-13"), exposerate=2.75*params$recrate))
+milestones = rbind(milestones, data.frame(desc="D. Cierre", date=ymd("2020-03-14"), exposerate=2.25*params$recrate))
+milestones = rbind(milestones, data.frame(desc="E. Cierre de todos los sectores no esenciales", date=ymd("2020-03-28"), exposerate=0.6*params$recrate))
+params$exposerate = fillDates(input_dates, milestones)
+
+results = runModel(pat_locator_prov, movement_data_prov, input_dates, params, num_runs = 10)
+
+# Plot 
+plotAllPatches(results$all_spread, patNames, col="inf", milestones=milestones, real_data=real_data)
+#plotAllPatches(results$all_spread, patNames, col="inf_day", milestones=milestones, real_data=real_data)
+plotAllPatches(results$all_spread, patNames, col="rep_day", milestones=milestones, real_data=real_data)
+plotAllPatches(results$all_spread, patNames, col="rep_total", milestones=milestones, real_data=real_data)
+
+plotPatch(results$all_spread,"Alicante", col=c("inf", "rec", "exp"), milestones = milestones, real_data = real_data, real_data_cols = c("inf", "rep_total"))
+
+tabla = results$all_spread[, c("dates", "inf_Alicante", "inf_total_Alicante", "rep_total_Alicante")]
+names(tabla) = c("dates", "casos_activos", "casos_totales", "reportados_totales")
+write.csv(tabla, file=paste0("estimacion_a-", today(), ".csv"))
+```
+
+```{r echo=FALSE}
+real_cases = real_data$cases 
+model_cases = results[["all_spread"]]$rep_total_CV 
+s <- length(model_cases)
+r <- length(real_cases)
+delta <- min(s,r) #dias
+datos <- data.frame()
+#length(results[["epidemic_curve"]]$inf[min_s:s])
+#length(real_data$inf[min_r:r])
+x <- abs(model_cases[1:delta]-real_cases[1:delta])/pat_locator_prov$pop
+mean_error <- mean(x,na.rm = TRUE)
+plot(x,type='p',col='red',xlab = "days",ylab = "Residuals", 
+     main = "Diferencias relativas entre casos y casos reportados",ylim = c(0,0.002))
+```
+
+
+El error relativo promedio en el ajuste de los último `r delta` días es de `r mean_error`, esto lleva a un error de $\pm$ `r floor(pat_locator_cv$pop * mean_error)` individuos.
+
