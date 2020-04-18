@@ -1,0 +1,307 @@
+---
+title: "Untitled"
+author: "COVId19 TaskForce"
+date: "4/7/2020"
+output: word_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+
+```{r echo=FALSE, results='hide', warning=FALSE, error=FALSE, message=FALSE}
+rm(list=ls())
+library(data.table) # fread - fastly reading data
+library(lubridate)
+library(knitr)
+
+source("bearmod_helper.R")
+
+# Establece fechas de la simulacion
+start_date = ymd("2020-03-01")
+end_date = ymd("2020-04-06")
+input_dates = seq(from=start_date,to=end_date,by="days") 
+
+# Parametros del modelo
+params = list()
+params$prop_reported = 0.2  # Factor por el que multiplicar los casos reales para obtener los reportados
+params$exposepd = 5.1 #5.1 # incubation period (1/exposepd = prob. of exp -> inf transition)
+params$recrate = 1/12 #daily probability of recovery (prob. of inf -> rec transition)
+exposed_pop_inf_prop = 0.7
+
+# Parametros con probabilidad de infeccion de expuestos = 0
+# milestones = data.frame()
+# milestones = rbind(milestones, data.frame(desc="A. Ninguna acción tomada", date=ymd("2020-02-01"), exposerate=9/12))
+# milestones = rbind(milestones, data.frame(desc="B. Distanciamiento social", date=ymd("2020-03-09"), exposerate=7.5/12))
+# milestones = rbind(milestones, data.frame(desc="C. Cierre de colegios", date=ymd("2020-03-13"), exposerate=7/12))
+# milestones = rbind(milestones, data.frame(desc="D. Cierre", date=ymd("2020-03-14"), exposerate=4.5/12))
+# milestones = rbind(milestones, data.frame(desc="E. Cierre de todos los sectores no esenciales", date=ymd("2020-03-28"), exposerate=1/12))
+# #milestones = rbind(milestones, data.frame(date=ymd("2020-04-11"), desc="Total isolation", exposerate=1/12))
+# params$exposerate = fillDates(input_dates, milestones)
+# 
+# pat_locator_cv = data.frame(patIDs="1", patNames="CV", pop=4963703, nInf=15, nExp=15*2)
+
+# Parametros con probabilidad de infeccion de expuestos = 1
+# milestones = data.frame()
+# milestones = rbind(milestones, data.frame(desc="A. Ninguna acción tomada", date=ymd("2020-02-01"), exposerate=4/12))
+# milestones = rbind(milestones, data.frame(desc="B. Distanciamiento social", date=ymd("2020-03-09"), exposerate=3/12))
+# milestones = rbind(milestones, data.frame(desc="C. Cierre de colegios", date=ymd("2020-03-13"), exposerate=2.75/12))
+# milestones = rbind(milestones, data.frame(desc="D. Cierre", date=ymd("2020-03-14"), exposerate=2.68/12))
+# milestones = rbind(milestones, data.frame(desc="E. Cierre de todos los sectores no esenciales", date=ymd("2020-03-28"), exposerate=0.4/12))
+# #milestones = rbind(milestones, data.frame(date=ymd("2020-04-11"), desc="Total isolation", exposerate=1/12))
+# params$exposerate = fillDates(input_dates, milestones)
+# 
+# pat_locator_cv = data.frame(patIDs="1", patNames="CV", pop=4963703, nInf=15, nExp=15)
+
+# Parametros con probabilidad de infeccion de expuestos = 0.7
+milestones = data.frame()
+milestones = rbind(milestones, data.frame(desc="A. Ninguna acción tomada", date=ymd("2020-02-01"), exposerate=4.5/12))
+milestones = rbind(milestones, data.frame(desc="B. Distanciamiento social", date=ymd("2020-03-09"), exposerate=4/12))
+milestones = rbind(milestones, data.frame(desc="C. Cierre de colegios", date=ymd("2020-03-13"), exposerate=3.75/12))
+milestones = rbind(milestones, data.frame(desc="D. Cierre", date=ymd("2020-03-14"), exposerate=3/12))
+milestones = rbind(milestones, data.frame(desc="E. Cierre de todos los sectores no esenciales", date=ymd("2020-03-28"), exposerate=0.5/12))
+#milestones = rbind(milestones, data.frame(date=ymd("2020-04-11"), desc="Total isolation", exposerate=1/12))
+params$exposerate = fillDates(input_dates, milestones)
+
+pat_locator_cv = data.frame(patIDs="1", patNames="CV", pop=4963703, nInf=15, nExp=15)
+
+
+# Tabla de movilidad por provincias (_prov) y sin movilidad (_zero)
+movement_data_prov = read.table("testmove_CV_normal.csv",sep=",",header=T)
+movement_data_prov = fillDates(input_dates, movement_data_prov)
+
+movement_data_zero = data.frame(date=NA, fr_pat=NA, to_pat=NA, fr_users=NA, movers=NA)
+```
+
+
+```{r echo=FALSE, results='asis'}
+kable(milestones, digits=2, col.names = c("Punto de control", "Fecha", "$U$"))
+```
+
+Los valores de los parámetros empleados en las simulaciones son: la tasa de detección considerada es de `r params$prop_reported`, la probabilidad de del paso de un individuo expuesto a infectado considerada es de `r 1/params$exposepd` y finalmente la probabilidad diaria de recuperación de `r params$recrate`.
+ 
+
+## Escenario 1 (A+B+C+D+E)
+
+```{r echo=FALSE}
+results = runModel(pat_locator_cv, movement_data_zero, input_dates, params, num_runs = 10, show_reported = TRUE, exposed_pop_inf_prop=exposed_pop_inf_prop)
+
+real_data = read.table("cv_covid19.csv",sep=",",header=T)
+real_data = real_data[61:97,]
+real_data$removed = real_data$deaths + real_data$recovered
+real_data$inf = real_data$cases - real_data$removed
+
+results$all_spread$cases_CV = results$all_spread$inf_CV + results$all_spread$rec_CV
+
+# Plot 
+#plotAllPatches(results$all_spread, patNames, col="inf", milestones=milestones, real_data=real_data)
+plotAllPatches(results$all_spread, patNames, col="cases", milestones=milestones, real_data=real_data)
+
+inf = results$all_spread$inf_CV[length(results$all_spread$inf_CV)]
+rec = results$all_spread$rec_CV[length(results$all_spread$rec_CV)]
+escenarios = data.frame(escenario="Escenario #1 (A+B+C+D+E)", inf=inf, rec=rec, cases=(inf+rec))
+```
+
+```{r echo=FALSE}
+real_cases = real_data$cases 
+model_cases = results[["all_spread"]]$cases_CV # results[["epidemic_curve"]]$inf
+s <- length(model_cases)
+r <- length(real_cases)
+delta <- 36 #dias
+min_s <- s-delta
+min_r <- r-delta
+datos <- data.frame()
+#length(results[["epidemic_curve"]]$inf[min_s:s])
+#length(real_data$inf[min_r:r])
+x <- abs(model_cases[min_s:s]-real_cases[min_r:r])/pat_locator_cv$pop
+mean_error <- mean(x,na.rm = TRUE)
+#plot(x,type='p',col='red',xlab = "days",ylab = "Residuals", 
+#     main = "Diferencias relativas entre casos y casos reportados: 37 dias",ylim = c(0,0.002))
+```
+El error relativo promedio en el ajuste de los último `r delta` días es de `r mean_error`, esto lleva a un error de $\pm$ `r floor(pat_locator_cv$pop * mean_error)` individuos.
+
+
+
+## Escenario 2 (A+B+C+D)
+
+```{r echo=FALSE}
+milestones = milestones[1:(nrow(milestones)-1),]
+params$exposerate = fillDates(input_dates, milestones)
+
+results = runModel(pat_locator_cv, movement_data_zero, input_dates, params, num_runs = 10, show_reported = TRUE, exposed_pop_inf_prop = exposed_pop_inf_prop)
+
+real_data = read.table("cv_covid19.csv",sep=",",header=T)
+real_data = real_data[61:97,]
+real_data$removed = real_data$deaths + real_data$recovered
+real_data$inf = real_data$cases - real_data$removed
+
+results$all_spread$cases_CV = results$all_spread$inf_CV + results$all_spread$rec_CV
+
+# Plot 
+#plotAllPatches(results$all_spread, patNames, col="inf", milestones=milestones, real_data=real_data)
+plotAllPatches(results$all_spread, patNames, col="cases", milestones=milestones, real_data=real_data)
+
+inf = results$all_spread$inf_CV[length(results$all_spread$inf_CV)]
+rec = results$all_spread$rec_CV[length(results$all_spread$rec_CV)]
+escenarios = rbind(escenarios, data.frame(escenario="Escenario #2 (A+B+C+D)", inf=inf, rec=rec, cases=(inf+rec)))
+```
+
+```{r echo=FALSE}
+real_cases = real_data$cases 
+model_cases = results[["all_spread"]]$cases_CV # results[["epidemic_curve"]]$inf
+s <- length(model_cases)
+r <- length(real_cases)
+delta <- 36 #dias
+min_s <- s-delta
+min_r <- r-delta
+datos <- data.frame()
+#length(results[["epidemic_curve"]]$inf[min_s:s])
+#length(real_data$inf[min_r:r])
+x <- abs(model_cases[min_s:s]-real_cases[min_r:r])/pat_locator_cv$pop
+mean_error <- mean(x,na.rm = TRUE)
+#plot(x,type='p',col='red',xlab = "days",ylab = "Residuals", 
+#     main = "Diferencias relativas entre casos y casos reportados: 37 dias",ylim = c(0,0.002))
+```
+El error relativo promedio en el ajuste de los último `r delta` días es de `r mean_error`, esto lleva a un error de $\pm$ `r floor(pat_locator_cv$pop * mean_error)` individuos.
+
+
+## Escenario 3 (A+B+C)
+
+```{r echo=FALSE}
+milestones = milestones[1:(nrow(milestones)-1),]
+params$exposerate = fillDates(input_dates, milestones)
+
+results = runModel(pat_locator_cv, movement_data_zero, input_dates, params, num_runs = 10, show_reported = TRUE, exposed_pop_inf_prop = exposed_pop_inf_prop)
+
+real_data = read.table("cv_covid19.csv",sep=",",header=T)
+real_data = real_data[61:97,]
+real_data$removed = real_data$deaths + real_data$recovered
+real_data$inf = real_data$cases - real_data$removed
+
+results$all_spread$cases_CV = results$all_spread$inf_CV + results$all_spread$rec_CV
+
+# Plot 
+#plotAllPatches(results$all_spread, patNames, col="inf", milestones=milestones, real_data=real_data)
+plotAllPatches(results$all_spread, patNames, col="cases", milestones=milestones, real_data=real_data)
+
+inf = results$all_spread$inf_CV[length(results$all_spread$inf_CV)]
+rec = results$all_spread$rec_CV[length(results$all_spread$rec_CV)]
+escenarios = rbind(escenarios, data.frame(escenario="Escenario #3 (A+B+C)", inf=inf, rec=rec, cases=(inf+rec)))
+```
+
+```{r echo=FALSE}
+real_cases = real_data$cases 
+model_cases = results[["all_spread"]]$cases_CV # results[["epidemic_curve"]]$inf
+s <- length(model_cases)
+r <- length(real_cases)
+delta <- 36 #dias
+min_s <- s-delta
+min_r <- r-delta
+datos <- data.frame()
+#length(results[["epidemic_curve"]]$inf[min_s:s])
+#length(real_data$inf[min_r:r])
+x <- abs(model_cases[min_s:s]-real_cases[min_r:r])/pat_locator_cv$pop
+mean_error <- mean(x,na.rm = TRUE)
+#plot(x,type='p',col='red',xlab = "days",ylab = "Residuals", 
+#     main = "Diferencias relativas entre casos y casos reportados: 37 dias",ylim = c(0,0.002))
+```
+El error relativo promedio en el ajuste de los último `r delta` días es de `r mean_error`, esto lleva a un error de $\pm$ `r floor(pat_locator_cv$pop * mean_error)` individuos.
+
+
+
+## Escenario 4 (A+B)
+
+```{r echo=FALSE}
+milestones = milestones[1:(nrow(milestones)-1),]
+params$exposerate = fillDates(input_dates, milestones)
+
+results = runModel(pat_locator_cv, movement_data_zero, input_dates, params, num_runs = 10, show_reported = TRUE, exposed_pop_inf_prop = exposed_pop_inf_prop)
+
+real_data = read.table("cv_covid19.csv",sep=",",header=T)
+real_data = real_data[61:97,]
+real_data$removed = real_data$deaths + real_data$recovered
+real_data$inf = real_data$cases - real_data$removed
+
+results$all_spread$cases_CV = results$all_spread$inf_CV + results$all_spread$rec_CV
+
+# Plot 
+#plotAllPatches(results$all_spread, patNames, col="inf", milestones=milestones, real_data=real_data)
+plotAllPatches(results$all_spread, patNames, col="cases", milestones=milestones, real_data=real_data)
+
+inf = results$all_spread$inf_CV[length(results$all_spread$inf_CV)]
+rec = results$all_spread$rec_CV[length(results$all_spread$rec_CV)]
+escenarios = rbind(escenarios, data.frame(escenario="Escenario #4 (A+B)", inf=inf, rec=rec, cases=(inf+rec)))
+```
+
+```{r echo=FALSE}
+real_cases = real_data$cases 
+model_cases = results[["all_spread"]]$cases_CV # results[["epidemic_curve"]]$inf
+s <- length(model_cases)
+r <- length(real_cases)
+delta <- 36 #dias
+min_s <- s-delta
+min_r <- r-delta
+datos <- data.frame()
+#length(results[["epidemic_curve"]]$inf[min_s:s])
+#length(real_data$inf[min_r:r])
+x <- abs(model_cases[min_s:s]-real_cases[min_r:r])/pat_locator_cv$pop
+mean_error <- mean(x,na.rm = TRUE)
+#plot(x,type='p',col='red',xlab = "days",ylab = "Residuals", 
+#     main = "Diferencias relativas entre casos y casos reportados: 37 dias",ylim = c(0,0.002))
+```
+El error relativo promedio en el ajuste de los último `r delta` días es de `r mean_error`, esto lleva a un error de $\pm$ `r floor(pat_locator_cv$pop * mean_error)` individuos.
+
+
+## Escenario 5 (A)
+
+```{r echo=FALSE}
+milestones = milestones[1:(nrow(milestones)-1),]
+params$exposerate = fillDates(input_dates, milestones)
+
+results = runModel(pat_locator_cv, movement_data_zero, input_dates, params, num_runs = 10, show_reported = TRUE, exposed_pop_inf_prop = exposed_pop_inf_prop)
+
+real_data = read.table("cv_covid19.csv",sep=",",header=T)
+real_data = real_data[61:97,]
+real_data$removed = real_data$deaths + real_data$recovered
+real_data$inf = real_data$cases - real_data$removed
+
+results$all_spread$cases_CV = results$all_spread$inf_CV + results$all_spread$rec_CV
+
+# Plot 
+#plotAllPatches(results$all_spread, patNames, col="inf", milestones=milestones, real_data=real_data)
+plotAllPatches(results$all_spread, patNames, col="cases", milestones=milestones, real_data=real_data)
+
+inf = results$all_spread$inf_CV[length(results$all_spread$inf_CV)]
+rec = results$all_spread$rec_CV[length(results$all_spread$rec_CV)]
+escenarios = rbind(escenarios, data.frame(escenario="Escenario #5 (A)", inf=inf, rec=rec, cases=(inf+rec)))
+```
+
+```{r echo=FALSE}
+real_cases = real_data$cases 
+model_cases = results[["all_spread"]]$cases_CV # results[["epidemic_curve"]]$inf
+s <- length(model_cases)
+r <- length(real_cases)
+delta <- 36 #dias
+min_s <- s-delta
+min_r <- r-delta
+datos <- data.frame()
+#length(results[["epidemic_curve"]]$inf[min_s:s])
+#length(real_data$inf[min_r:r])
+x <- abs(model_cases[min_s:s]-real_cases[min_r:r])/pat_locator_cv$pop
+mean_error <- mean(x,na.rm = TRUE)
+#plot(x,type='p',col='red',xlab = "days",ylab = "Residuals", 
+#     main = "Diferencias relativas entre casos y casos reportados: 37 dias",ylim = c(0,0.002))
+```
+El error relativo promedio en el ajuste de los último `r delta` días es de `r mean_error`, esto lleva a un error de $\pm$ `r floor(pat_locator_cv$pop * mean_error)` individuos.
+
+
+
+A día 6/04/2020 hay un total de 7330 casos registrados en la Comunidad Valenciana, de los cuales 5763 permanecen infectados en la actualidad. Partiendo desde el día 1/03/2020 se han realizado diferentes escenarios de simulación dependiendo de la medida de control implantada en una fecha determinada, considerando una tasa de casos detectados frente a casos reales del 20%.
+
+```{r echo=FALSE}
+escenarios$fallecidos = escenarios$cases*0.087
+escenarios$recuperados = escenarios$cases*0.127
+kable(escenarios[,c("escenario", "cases", "fallecidos", "recuperados")], digits=0, col.names = c("Escenario", "Casos reportados", "Fallecidos estimados", "Recuperados estimados"))
+```

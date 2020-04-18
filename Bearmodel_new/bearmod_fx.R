@@ -101,15 +101,19 @@ exposedtoinfTimeStep = function(HPop, exp_to_infrate){
 exposedTimeStep = function(HPop, exposerate_df, current_day, exposed_pop_inf_prop){
   
   if (is.numeric(exposerate_df)){
-    exposerate = exposerate_df
+    exposerate = rep(exposerate_df, length(HPop$names))
   }
   if (is.data.frame(exposerate_df)){
-    exposerate = subset(exposerate_df, date == current_day)$exposerate
+    exposerate_day = subset(exposerate_df, date == current_day)
+    exposerate = exposerate_day[,is.element(names(exposerate_day), HPop$names)]
+    if(length(exposerate)!=length(HPop$names)) {
+      exposerate = rep(exposerate_day$exposerate, length(HPop$names)) 
+    }
   }
   for (i in 1:length(HPop$nInf)){
     infectious_pop = HPop$nInf[i] + exposed_pop_inf_prop * HPop$nExp[i]
-    #HPop$nExposedToday[i]= sum(rbinom(infectious_pop,1,exposerate)) * (1 - ( (HPop$nInf[i] + HPop$nExp[i]) / HPop$nTotal[i]))
-    HPop$nExposedToday[i]= sum(rpois(infectious_pop,exposerate)) * (1 - ( (HPop$nInf[i] + HPop$nExp[i] + HPop$nRec[i]) / HPop$nTotal[i]))
+    #HPop$nExposedToday[i]= sum(rbinom(infectious_pop,1,exposerate[i])) * (1 - ( (HPop$nInf[i] + HPop$nExp[i]) / HPop$nTotal[i]))
+    HPop$nExposedToday[i]= sum(rpois(infectious_pop,exposerate[i])) * (1 - ( (HPop$nInf[i] + HPop$nExp[i] + HPop$nRec[i]) / HPop$nTotal[i]))
 
 
     if (HPop$nExp[i] + HPop$nExposedToday[i] < HPop$nTotal[i] - HPop$nInf[i] - HPop$nRec[i] ) {
