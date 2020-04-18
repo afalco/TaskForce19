@@ -457,15 +457,13 @@ Assume that $\beta_t = u_t \,  \gamma_t$ where $u_t$ is an exogenous time depend
 $$
 Z_t = \beta_t \, I_t = u_t \, \gamma_t\, I_t  = u_t \, \sum_{k=1}^{I_t} Y_{k,t}.
 $$
-Since $E[Z_t|\mathcal{F}_t] = u_t \, \gamma_t\, I_t$ we can regard $Z_t \sim \mathcal{B}(u_t \,I_t,\gamma_t).$ Assuming $\gamma_t$ small enough, $ u_t \,\gamma_t\, I_t > 30$ and $u_t >> \gamma_t \, I_t$ we can assume that
-$$
-Z_t \sim \mathcal{P}(u_t)
-$$
+Since $E[Z_t|\mathcal{F}_t] = u_t \, \gamma_t\, I_t$ and
+$\sum_{k=1}^{I_t} Y_{k,t} \sim \mathcal{B}(I_t,\gamma_t).$ 
 Thus we can finally provide the Stochastic SEIR Model
 \begin{align}
-E_{t+1} & = E_t - \sum_{k=1}^{E_t} X_{k} + \left( 1- \frac{E_t+I_t+R_t}{N} \right)Z_t, \\
-I_{t+1} & = I_t + \sum_{k=1}^{E_t} X_{k}  - \sum_{k=1}^{I_t} Y_{k}, \\
-R_{t+1} & = R_t + \sum_{k=1}^{I_t} Y_{k}
+E_{t+1} & = E_t - \sum_{k=1}^{E_t} X_{k,t} +  \sum_{k=1}^{I_t} Y_{k,t} \, \left( 1- \frac{E_t+I_t+R_t}{N} \right)  \, u_t , \\
+I_{t+1} & = I_t + \sum_{k=1}^{E_t} X_{k,t}  - \sum_{k=1}^{I_t} Y_{k,t}, \\
+R_{t+1} & = R_t + \sum_{k=1}^{I_t} Y_{k,t}
 \end{align}
 where 
 $$
@@ -474,8 +472,7 @@ $$
 and
 \begin{align*}
 X_{1,t},\ldots,X_{E_t,t} & \text{ is a sample from a } \mathcal{B}(\sigma_t), \\
-Y_{1,t},\ldots,Y_{I_t,t} & \text{ is a sample from a } \mathcal{B}(\gamma_t), \\
-Z_1,\ldots,Z_T & \text{ is a sample from a } \mathcal{P}(u_t).
+Y_{1,t},\ldots,Y_{I_t,t} & \text{ is a sample from a } \mathcal{B}(\gamma_t),
 \end{align*}
-Here $\mathcal{B}(p)$ denotes a Bernoulli distribution and $\mathcal{P}(\lambda)$ a Poisson distribution.
+here $\mathcal{B}(p)$ denotes a Bernoulli distribution.
 \end{document}
